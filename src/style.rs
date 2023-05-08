@@ -1,4 +1,4 @@
-use std::{cmp, collections::HashMap, fmt::Write};
+use std::{cmp, collections::HashMap};
 
 use crossterm::style::Attribute;
 
@@ -125,6 +125,36 @@ impl Style {
         self
     }
 
+    pub fn italic(mut self, value: bool) -> Self {
+        self.set(Props::ItalicKey, Value::Bool(value));
+        self
+    }
+
+    pub fn underline(mut self, value: bool) -> Self {
+        self.set(Props::UnderlineKey, Value::Bool(value));
+        self
+    }
+
+    pub fn strikethrough(mut self, value: bool) -> Self {
+        self.set(Props::StrikethroughKey, Value::Bool(value));
+        self
+    }
+
+    pub fn reverse(mut self, value: bool) -> Self {
+        self.set(Props::ReverseKey, Value::Bool(value));
+        self
+    }
+
+    pub fn blink(mut self, value: bool) -> Self {
+        self.set(Props::BlinkKey, Value::Bool(value));
+        self
+    }
+
+    pub fn faint(mut self, value: bool) -> Self {
+        self.set(Props::FaintKey, Value::Bool(value));
+        self
+    }
+
     pub fn set(&mut self, key: Props, value: Value) {
         match value {
             Value::Int(val) => {
@@ -136,21 +166,24 @@ impl Style {
             }
         }
     }
+    pub fn render(&mut self, strs: &str) -> String {
+        // The final compiled string to be returned after all the operations.
+        let mut compiled_string = String::new();
+        compiled_string.push_str(strs);
 
-    pub fn render(&mut self, strs: &mut str) -> String {
         if self.r.is_none() {
             self.r = Some(Renderer::new());
         }
         if self.value == "" {
-            strs.to_owned().push_str(&self.value);
+            compiled_string.push_str(&self.value);
         }
 
-        // if self.rules.len() == 0 {
-        //     return self.value.to_string();
-        // }
+        if self.rules.len() == 0 {
+            return compiled_string.to_string();
+        }
         let mut te = String::new();
         let mut te_space = String::new();
-        let mut te_white_space = String::new();
+        // let mut te_white_space = String::new();
 
         let bold = self.get_as_bool(Props::BoldKey, false);
         let italic = self.get_as_bool(Props::ItalicKey, false);
@@ -160,13 +193,25 @@ impl Style {
         let blink = self.get_as_bool(Props::BlinkKey, false);
         let faint = self.get_as_bool(Props::FaintKey, false);
 
-        let color_whitespaces = self.get_as_bool(Props::ColorWhitespaceKey, true);
+        let width = self.get_as_int(Props::WidthKey);
+        let height = self.get_as_int(Props::HeightKey);
+        let horizontal_align = self.get_as_int(Props::AlignHorizontalKey);
+        let vertical_align = self.get_as_int(Props::AlignVerticalKey);
+
+        let top_padding = self.get_as_int(Props::PaddingTopKey);
+        let right_padding = self.get_as_int(Props::PaddingRightKey);
+        let bottom_padding = self.get_as_int(Props::PaddingBottomKey);
+        let left_padding = self.get_as_int(Props::PaddingLeftKey);
+
+        let inline = self.get_as_bool(Props::InlineKey, false);
+
+        // let color_whitespaces = self.get_as_bool(Props::ColorWhitespaceKey, true);
         let underline_spaces = underline && self.get_as_bool(Props::UnderlineSpacesKey, true);
         let strikethrough_spaces =
             strikethrough && self.get_as_bool(Props::StrikethroughSpacesKey, true);
 
-        let style_whitespace = reverse;
-        let use_space_styler = underline_spaces || strikethrough_spaces;
+        // let style_whitespace = reverse;
+        // let use_space_styler = underline_spaces || strikethrough_spaces;
 
         if bold {
             te.push_str(&Attribute::Bold.to_string());
@@ -199,11 +244,26 @@ impl Style {
         if strikethrough_spaces {
             te_space.push_str(&Attribute::CrossedOut.to_string());
         }
-        let l = strs.split("\n");
-        let mut compiled_str = String::new();
-        for i in l {
-            compiled_str.push_str(&Style::style(&te, i).to_string());
+
+        if inline {
+            compiled_string = compiled_string.replace('\n', "");
         }
-        compiled_str
+
+        if !inline && width > 0 {
+            let wrap_at = (width - left_padding - right_padding) as usize;
+            compiled_string = textwrap::fill(&compiled_string, wrap_at);
+        }
+
+        let l = compiled_string.split('\n');
+        let mut temp = String::new();
+        for (i, line) in l.clone().enumerate() {
+            temp.push_str(&Style::style(&te, line).to_string());
+            if i != l.clone().count() - 1 {
+                temp.push('\n');
+            }
+        }
+        compiled_string = temp;
+
+        compiled_string
     }
 }
