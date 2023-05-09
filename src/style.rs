@@ -2,7 +2,9 @@ use std::{cmp, collections::HashMap};
 
 use crossterm::style::Attribute;
 
-use crate::{color::TerminalColor, renderer::Renderer};
+use crate::{
+    align::align_text_vertical, color::TerminalColor, position::Position, renderer::Renderer,
+};
 
 #[derive(Eq, Hash, PartialEq)]
 pub enum Props {
@@ -66,8 +68,9 @@ pub enum Props {
 pub enum Value {
     Str(String),
     Bool(bool),
-    Int(i32),
+    Int(usize),
     Color(Box<dyn TerminalColor>),
+    Pos(Position),
 }
 
 pub struct Style {
@@ -94,13 +97,22 @@ impl Style {
         default_val
     }
 
-    pub fn get_as_int(&self, prop: Props) -> i32 {
+    pub fn get_as_int(&self, prop: Props) -> usize {
         if self.rules.contains_key(&prop) {
             if let Value::Int(val) = self.rules.get(&prop).unwrap() {
                 return *val;
             }
         }
         0
+    }
+
+    pub fn get_as_position(&self, prop: Props) -> Position {
+        if self.rules.contains_key(&prop) {
+            if let Value::Pos(val) = self.rules.get(&prop).unwrap() {
+                return *val;
+            }
+        }
+        Position::Top
     }
 
     // pub fn get_as_color(&self, prop: Props) -> Box<dyn TerminalColor> {
@@ -112,10 +124,18 @@ impl Style {
     //     Box::new(NoColor)
     // }
 
-    pub fn style(style: &str, input_strs: &str) -> String {
+    pub fn style(style: &str, strs: &str) -> String {
         let mut compiled_string = String::new();
         compiled_string.push_str(&style);
-        compiled_string.push_str(&input_strs);
+        compiled_string.push_str(strs);
+        compiled_string.push_str(&Attribute::Reset.to_string());
+        compiled_string
+    }
+
+    pub fn style_char(style: &str, ch: char) -> String {
+        let mut compiled_string = String::new();
+        compiled_string.push_str(&style);
+        compiled_string.push(ch);
         compiled_string.push_str(&Attribute::Reset.to_string());
         compiled_string
     }
@@ -155,6 +175,11 @@ impl Style {
         self
     }
 
+    pub fn underline_spaces(mut self, value: bool) -> Self {
+        self.set(Props::UnderlineSpacesKey, Value::Bool(value));
+        self
+    }
+
     pub fn set(&mut self, key: Props, value: Value) {
         match value {
             Value::Int(val) => {
@@ -166,6 +191,7 @@ impl Style {
             }
         }
     }
+
     pub fn render(&mut self, strs: &str) -> String {
         // The final compiled string to be returned after all the operations.
         let mut compiled_string = String::new();
@@ -195,8 +221,8 @@ impl Style {
 
         let width = self.get_as_int(Props::WidthKey);
         let height = self.get_as_int(Props::HeightKey);
-        let horizontal_align = self.get_as_int(Props::AlignHorizontalKey);
-        let vertical_align = self.get_as_int(Props::AlignVerticalKey);
+        let horizontal_align = self.get_as_position(Props::AlignHorizontalKey);
+        let vertical_align = self.get_as_position(Props::AlignVerticalKey);
 
         let top_padding = self.get_as_int(Props::PaddingTopKey);
         let right_padding = self.get_as_int(Props::PaddingRightKey);
@@ -211,7 +237,7 @@ impl Style {
             strikethrough && self.get_as_bool(Props::StrikethroughSpacesKey, true);
 
         // let style_whitespace = reverse;
-        // let use_space_styler = underline_spaces || strikethrough_spaces;
+        let use_space_styler = !underline_spaces || !strikethrough_spaces;
 
         if bold {
             te.push_str(&Attribute::Bold.to_string());
@@ -249,21 +275,98 @@ impl Style {
             compiled_string = compiled_string.replace('\n', "");
         }
 
+        // Word wrap feature.
+        // TODO: Handle the case of text wrapping with hyphenation.
         if !inline && width > 0 {
             let wrap_at = (width - left_padding - right_padding) as usize;
             compiled_string = textwrap::fill(&compiled_string, wrap_at);
         }
 
-        let l = compiled_string.split('\n');
-        let mut temp = String::new();
-        for (i, line) in l.clone().enumerate() {
-            temp.push_str(&Style::style(&te, line).to_string());
-            if i != l.clone().count() - 1 {
-                temp.push('\n');
+        // Rendering the core text here. Inside a code block to delete the temp values
+        // once it goes out of scope.
+        {
+            let mut temp = String::new();
+            let l = compiled_string.split('\n');
+            for (i, line) in l.clone().enumerate() {
+                // Identify the spaces and applying the styling separately to the spaces.
+                // This only works for underscores and strikethroughs
+                if use_space_styler {
+                    for ch in line.chars() {
+                        if ch.is_whitespace() {
+                            temp.push_str(&Style::style_char(&te_space, ch));
+                            continue;
+                        }
+                        temp.push_str(&Style::style_char(&te, ch));
+                    }
+                } else {
+                    temp.push_str(&Style::style(&te, line))
+                }
+
+                if i != l.clone().count() - 1 {
+                    temp.push('\n');
+                }
+            }
+            compiled_string = temp;
+        }
+
+        if !inline {
+            if left_padding > 0 {
+                compiled_string = pad_left(&mut compiled_string, left_padding);
+            }
+            if right_padding > 0 {
+                compiled_string = pad_right(&mut compiled_string, left_padding);
+            }
+            if top_padding > 0 {
+                let mut sp = "\n".repeat(top_padding as usize);
+
+                sp.push_str(&compiled_string);
+                compiled_string = sp;
+            }
+            if bottom_padding > 0 {
+                let sp = "\n".repeat(top_padding as usize);
+                compiled_string.push_str(&sp);
             }
         }
-        compiled_string = temp;
+
+        if height > 0 {
+            // Aligns the text to top, bottom or center vertically.
+            compiled_string = align_text_vertical(&mut compiled_string, vertical_align, height)
+        }
 
         compiled_string
     }
+}
+
+fn pad_left(strs: &mut str, n: usize) -> String {
+    let sp = "\n".repeat(n);
+    if n == 0 {
+        return strs.to_string();
+    }
+    let mut temp = String::new();
+    let lines = strs.split('\n');
+    for (i, line) in lines.clone().enumerate() {
+        temp.push_str(&sp);
+        temp.push_str(line);
+        if i < lines.clone().count() - 1 {
+            temp.push('\n');
+        }
+    }
+    return temp;
+}
+
+fn pad_right(strs: &mut str, n: usize) -> String {
+    let sp = "\n".repeat(n);
+    if n == 0 {
+        return strs.to_string();
+    }
+    let mut temp = String::new();
+    let lines = strs.split('\n');
+    for (i, line) in lines.clone().enumerate() {
+        temp.push_str(line);
+        temp.push_str(&sp);
+        if i < lines.clone().count() - 1 {
+            temp.push('\n');
+        }
+    }
+    return temp;
 }
