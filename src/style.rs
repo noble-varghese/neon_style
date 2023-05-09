@@ -1,9 +1,13 @@
-use std::{cmp, collections::HashMap};
+use std::{cmp, collections::HashMap, usize};
 
 use crossterm::style::Attribute;
 
 use crate::{
-    align::align_text_vertical, color::TerminalColor, position::Position, renderer::Renderer,
+    align::{align_text_horizontal, align_text_vertical},
+    color::TerminalColor,
+    padding::{pad_bottom, pad_left, pad_right, pad_top},
+    position::Position,
+    renderer::Renderer,
 };
 
 #[derive(Eq, Hash, PartialEq)]
@@ -180,6 +184,40 @@ impl Style {
         self
     }
 
+    pub fn padding(mut self, values: [i32; 4]) -> Self {
+        let (top, right, bottom, left) = which_sides(&values);
+        println!(
+            "Values are top: {}, right: {}, bottom: {}, left: {}",
+            top, right, bottom, left
+        );
+
+        self.set(Props::PaddingTopKey, Value::Int(top as usize));
+        self.set(Props::PaddingBottomKey, Value::Int(bottom as usize));
+        self.set(Props::PaddingLeftKey, Value::Int(left as usize));
+        self.set(Props::PaddingRightKey, Value::Int(right as usize));
+        self
+    }
+
+    pub fn padding_top(mut self, value: i32) -> Self {
+        self.set(Props::PaddingTopKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn padding_bottom(mut self, value: i32) -> Self {
+        self.set(Props::PaddingBottomKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn padding_right(mut self, value: i32) -> Self {
+        self.set(Props::PaddingRightKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn padding_left(mut self, value: i32) -> Self {
+        self.set(Props::PaddingLeftKey, Value::Int(value as usize));
+        self
+    }
+
     pub fn set(&mut self, key: Props, value: Value) {
         match value {
             Value::Int(val) => {
@@ -219,11 +257,13 @@ impl Style {
         let blink = self.get_as_bool(Props::BlinkKey, false);
         let faint = self.get_as_bool(Props::FaintKey, false);
 
+        // Text width height and alignment related components.
         let width = self.get_as_int(Props::WidthKey);
         let height = self.get_as_int(Props::HeightKey);
         let horizontal_align = self.get_as_position(Props::AlignHorizontalKey);
         let vertical_align = self.get_as_position(Props::AlignVerticalKey);
 
+        // Padding related components
         let top_padding = self.get_as_int(Props::PaddingTopKey);
         let right_padding = self.get_as_int(Props::PaddingRightKey);
         let bottom_padding = self.get_as_int(Props::PaddingBottomKey);
@@ -311,20 +351,16 @@ impl Style {
 
         if !inline {
             if left_padding > 0 {
-                compiled_string = pad_left(&mut compiled_string, left_padding);
+                compiled_string = pad_left(&compiled_string, left_padding);
             }
             if right_padding > 0 {
-                compiled_string = pad_right(&mut compiled_string, left_padding);
+                compiled_string = pad_right(&compiled_string, left_padding);
             }
             if top_padding > 0 {
-                let mut sp = "\n".repeat(top_padding as usize);
-
-                sp.push_str(&compiled_string);
-                compiled_string = sp;
+                compiled_string = pad_top(&compiled_string, top_padding)
             }
             if bottom_padding > 0 {
-                let sp = "\n".repeat(top_padding as usize);
-                compiled_string.push_str(&sp);
+                compiled_string = pad_bottom(&compiled_string, bottom_padding);
             }
         }
 
@@ -333,40 +369,45 @@ impl Style {
             compiled_string = align_text_vertical(&mut compiled_string, vertical_align, height)
         }
 
+        {
+            let num_lines = compiled_string.split('\n').count();
+            if num_lines != 0 && width != 0 {
+                compiled_string = align_text_horizontal(&compiled_string, horizontal_align, width)
+            }
+        }
+
         compiled_string
     }
 }
 
-fn pad_left(strs: &mut str, n: usize) -> String {
-    let sp = "\n".repeat(n);
-    if n == 0 {
-        return strs.to_string();
-    }
-    let mut temp = String::new();
-    let lines = strs.split('\n');
-    for (i, line) in lines.clone().enumerate() {
-        temp.push_str(&sp);
-        temp.push_str(line);
-        if i < lines.clone().count() - 1 {
-            temp.push('\n');
+fn which_sides(values: &[i32]) -> (i32, i32, i32, i32) {
+    let [mut top, mut bottom, mut left, mut right] = [0, 0, 0, 0];
+    match values.len() {
+        1 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[0];
+            right = values[0];
         }
-    }
-    return temp;
-}
-
-fn pad_right(strs: &mut str, n: usize) -> String {
-    let sp = "\n".repeat(n);
-    if n == 0 {
-        return strs.to_string();
-    }
-    let mut temp = String::new();
-    let lines = strs.split('\n');
-    for (i, line) in lines.clone().enumerate() {
-        temp.push_str(line);
-        temp.push_str(&sp);
-        if i < lines.clone().count() - 1 {
-            temp.push('\n');
+        2 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[1];
+            right = values[1];
         }
+        3 => {
+            top = values[0];
+            left = values[1];
+            right = values[1];
+            bottom = values[2];
+        }
+        4 => {
+            top = values[0];
+            right = values[1];
+            bottom = values[2];
+            left = values[3];
+        }
+        _ => {}
     }
-    return temp;
+    return (top, right, bottom, left);
 }
