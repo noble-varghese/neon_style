@@ -1,4 +1,5 @@
 pub mod align;
+pub mod border;
 pub mod color;
 pub mod padding;
 pub mod position;

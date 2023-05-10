@@ -1,9 +1,10 @@
 use std::{cmp, collections::HashMap, usize};
 
-use crossterm::style::Attribute;
+use crossterm::style::{Attribute, Color};
 
 use crate::{
-    align::{align_text_horizontal, align_text_vertical},
+    align::{align_text_horizontal, align_text_vertical, get_lines},
+    border::Border,
     color::TerminalColor,
     padding::{pad_bottom, pad_left, pad_right, pad_top},
     position::Position,
@@ -73,8 +74,9 @@ pub enum Value {
     Str(String),
     Bool(bool),
     Int(usize),
-    Color(Box<dyn TerminalColor>),
+    Color(TerminalColor),
     Pos(Position),
+    Border(Border),
 }
 
 pub struct Style {
@@ -119,14 +121,23 @@ impl Style {
         Position::Top
     }
 
-    // pub fn get_as_color(&self, prop: Props) -> Box<dyn TerminalColor> {
-    //     if self.rules.contains_key(&prop) {
-    //         if let Value::Color(val) = self.rules.get(&prop).unwrap() {
-    //             return *val;
-    //         }
-    //     }
-    //     Box::new(NoColor)
-    // }
+    fn get_border_style(&self) -> Border {
+        if self.rules.contains_key(&Props::BorderStyleKey) {
+            if let Value::Border(val) = self.rules.get(&Props::BorderStyleKey).unwrap() {
+                return val.clone();
+            }
+        }
+        Border::default()
+    }
+
+    pub fn get_as_color(&self, prop: Props) -> TerminalColor {
+        if self.rules.contains_key(&prop) {
+            if let Value::Color(val) = self.rules.get(&prop).unwrap() {
+                return *val;
+            }
+        }
+        TerminalColor::default()
+    }
 
     pub fn style(style: &str, strs: &str) -> String {
         let mut compiled_string = String::new();
@@ -218,7 +229,53 @@ impl Style {
         self
     }
 
-    pub fn set(&mut self, key: Props, value: Value) {
+    fn apply_border(&self, strs: &str) -> String {
+        let top_set = self.is_set(Props::BorderTopKey);
+        let right_set = self.is_set(Props::BorderRightKey);
+        let bottom_set = self.is_set(Props::BorderBottomKey);
+        let left_set = self.is_set(Props::BorderLeftKey);
+
+        let border = self.get_border_style();
+        let mut has_top = self.get_as_bool(Props::BorderTopKey, false);
+        let mut has_right = self.get_as_bool(Props::BorderRightKey, false);
+        let mut has_bottom = self.get_as_bool(Props::BorderBottomKey, false);
+        let mut has_left = self.get_as_bool(Props::BorderLeftKey, false);
+
+        let top_fg = self.get_as_color(Props::BorderTopForegroundKey);
+        let right_fg = self.get_as_color(Props::BorderRightForegroundKey);
+        let left_fg = self.get_as_color(Props::BorderLeftForegroundKey);
+        let bottom_fg = self.get_as_color(Props::BorderBottomForegroundKey);
+
+        let top_bg = self.get_as_color(Props::BorderTopBackgroundKey);
+        let right_bg = self.get_as_color(Props::BorderRightBackgroundKey);
+        let left_bg = self.get_as_color(Props::BorderLeftBackgroundKey);
+        let bottom_bg = self.get_as_color(Props::BorderBottomBackgroundKey);
+
+        // if border is not set or all the sides have been disabled then return the str as it is without applying borders.
+        if border == Border::default() || (!top_set && !right_set && !bottom_set && !left_set) {
+            return strs.to_string();
+        }
+
+        // If the border is set and no side is specifically mentioned then apply borders to all sides.
+        if border != Border::default() && !(top_set || right_set || bottom_set || left_set) {
+            has_top = true;
+            has_right = true;
+            has_bottom = true;
+            has_left = true;
+        }
+
+        let (lines, width) = get_lines(strs);
+        return "".to_string();
+    }
+
+    fn is_set(&self, key: Props) -> bool {
+        if self.rules.contains_key(&key) {
+            return true;
+        }
+        false
+    }
+
+    fn set(&mut self, key: Props, value: Value) {
         match value {
             Value::Int(val) => {
                 // Inorder to eliminate the negative values.
@@ -375,6 +432,8 @@ impl Style {
                 compiled_string = align_text_horizontal(&compiled_string, horizontal_align, width)
             }
         }
+
+        if !inline {}
 
         compiled_string
     }
