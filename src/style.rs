@@ -263,7 +263,7 @@ impl Style {
         }
 
         let (lines, mut width) = get_lines(strs);
-        println!("Line len: {}", lines.clone().count()-1);
+        println!("Line len: {}", lines.clone().count() - 1);
 
         if has_left {
             if border.left.is_empty() {
@@ -344,7 +344,7 @@ impl Style {
         let mut left_index = 0;
         let mut right_index = 0;
         for (i, line) in lines.clone().enumerate() {
-            println!("Lines number {}: {}", i, line);
+            println!("Lines number {}: {} {}", i, line, line.len());
             if has_left {
                 let left_chars: Vec<String> = border.left.chars().map(|c| c.to_string()).collect();
                 let r = &left_chars[left_index];
@@ -378,6 +378,7 @@ impl Style {
                 width,
             );
             bottom = style_border(&bottom, bottom_fg, bottom_bg);
+            compiled_string.push_str("\n");
             compiled_string.push_str(&bottom);
         }
 
@@ -516,7 +517,7 @@ impl Style {
                 }
 
                 if i != l.clone().count() - 1 {
-                    temp.push('\n');
+                    temp.push_str("\n");
                 }
             }
             compiled_string = temp;
