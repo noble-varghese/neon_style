@@ -2,10 +2,10 @@ use crate::position::Position;
 use std::{cmp, str::Split};
 use textwrap::core::display_width;
 
-fn get_lines(s: &str) -> (Split<char>, usize) {
+pub fn get_lines(s: &str) -> (Split<char>, usize) {
     let lines = s.split('\n');
     let mut widest = 0;
-    for (i, line) in lines.clone().enumerate() {
+    for line in lines.clone() {
         // This gives us the printable width of string.
         // NOTE: printable width is not the same as the number of chars or bytes in a string. When working with Non-ASCII chars it may take up
         // more than one cell when printed.
@@ -67,6 +67,12 @@ pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> Stri
                 Position::Center => {
                     let left = short_amount / 2;
                     let right = left + short_amount % 2;
+
+                    let left_spaces = " ".repeat(left);
+                    let right_spaces = " ".repeat(right);
+
+                    let f = format!("{}{}{}", left_spaces, line, right_spaces);
+                    temp.push_str(&f);
                 }
                 Position::Right => {
                     let sp = " ".repeat(short_amount);
