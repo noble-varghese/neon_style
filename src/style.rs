@@ -1,11 +1,12 @@
 use std::{cmp, collections::HashMap, usize};
 
-use crossterm::style::{Attribute, Color};
+use crossterm::style::{Attribute, SetForegroundColor};
+use textwrap::core::display_width;
 
 use crate::{
     align::{align_text_horizontal, align_text_vertical, get_lines},
-    border::Border,
-    color::TerminalColor,
+    border::{get_first_char_as_string, render_horizontal_edge, Border},
+    color::{ColorValue, Colour},
     padding::{pad_bottom, pad_left, pad_right, pad_top},
     position::Position,
     renderer::Renderer,
@@ -74,7 +75,7 @@ pub enum Value {
     Str(String),
     Bool(bool),
     Int(usize),
-    Color(TerminalColor),
+    Color(Colour),
     Pos(Position),
     Border(Border),
 }
@@ -130,29 +131,13 @@ impl Style {
         Border::default()
     }
 
-    pub fn get_as_color(&self, prop: Props) -> TerminalColor {
+    pub fn get_as_color(&self, prop: Props) -> Colour {
         if self.rules.contains_key(&prop) {
             if let Value::Color(val) = self.rules.get(&prop).unwrap() {
-                return *val;
+                return val.clone();
             }
         }
-        TerminalColor::default()
-    }
-
-    pub fn style(style: &str, strs: &str) -> String {
-        let mut compiled_string = String::new();
-        compiled_string.push_str(&style);
-        compiled_string.push_str(strs);
-        compiled_string.push_str(&Attribute::Reset.to_string());
-        compiled_string
-    }
-
-    pub fn style_char(style: &str, ch: char) -> String {
-        let mut compiled_string = String::new();
-        compiled_string.push_str(&style);
-        compiled_string.push(ch);
-        compiled_string.push_str(&Attribute::Reset.to_string());
-        compiled_string
+        Colour::default()
     }
 
     pub fn bold(mut self, value: bool) -> Self {
@@ -235,16 +220,16 @@ impl Style {
         let bottom_set = self.is_set(Props::BorderBottomKey);
         let left_set = self.is_set(Props::BorderLeftKey);
 
-        let border = self.get_border_style();
+        let mut border = self.get_border_style();
         let mut has_top = self.get_as_bool(Props::BorderTopKey, false);
         let mut has_right = self.get_as_bool(Props::BorderRightKey, false);
         let mut has_bottom = self.get_as_bool(Props::BorderBottomKey, false);
         let mut has_left = self.get_as_bool(Props::BorderLeftKey, false);
 
         let top_fg = self.get_as_color(Props::BorderTopForegroundKey);
+        let bottom_fg = self.get_as_color(Props::BorderBottomForegroundKey);
         let right_fg = self.get_as_color(Props::BorderRightForegroundKey);
         let left_fg = self.get_as_color(Props::BorderLeftForegroundKey);
-        let bottom_fg = self.get_as_color(Props::BorderBottomForegroundKey);
 
         let top_bg = self.get_as_color(Props::BorderTopBackgroundKey);
         let right_bg = self.get_as_color(Props::BorderRightBackgroundKey);
@@ -264,7 +249,119 @@ impl Style {
             has_left = true;
         }
 
-        let (lines, width) = get_lines(strs);
+        let (lines, mut width) = get_lines(strs);
+
+        if has_left {
+            if border.left.is_empty() {
+                border.left = String::from(" ");
+            }
+            width += display_width(&border.left);
+        }
+
+        if has_right {
+            if border.right.is_empty() {
+                border.right = String::from(" ");
+            }
+            width += display_width(&border.right);
+        }
+
+        if has_top && has_left && border.top_left.is_empty() {
+            border.top_left = String::from(" ");
+        }
+
+        if has_top && has_right && border.top_right.is_empty() {
+            border.top_right = String::from(" ");
+        }
+
+        if has_bottom && has_left && border.bottom_left.is_empty() {
+            border.bottom_left = String::from(" ");
+        }
+
+        if has_bottom && has_right && border.bottom_right.is_empty() {
+            border.bottom_right = String::from(" ");
+        }
+
+        if has_top {
+            match (has_left, has_right) {
+                (false, false) => {
+                    border.top_left = String::from("");
+                    border.top_right = String::from("");
+                }
+                (true, false) => {
+                    border.top_right = String::from("");
+                }
+                (false, true) => {
+                    border.top_left = String::from("");
+                }
+                _ => {}
+            }
+        }
+
+        if has_bottom {
+            match (has_left, has_right) {
+                (false, false) => {
+                    border.bottom_left = String::from("");
+                    border.bottom_right = String::from("");
+                }
+                (true, false) => {
+                    border.bottom_right = String::from("");
+                }
+                (false, true) => {
+                    border.bottom_left = String::from("");
+                }
+                _ => {}
+            }
+        }
+
+        border.top_left = get_first_char_as_string(&border.top_left);
+        border.top_right = get_first_char_as_string(&border.top_right);
+        border.bottom_left = get_first_char_as_string(&border.bottom_left);
+        border.bottom_right = get_first_char_as_string(&border.bottom_right);
+
+        let mut compiled_string = String::new();
+
+        if has_top {
+            let mut top =
+                render_horizontal_edge(&border.top_left, &border.top, &border.top_right, width);
+            top = style_border(&top, top_fg, top_bg);
+            compiled_string.push_str(&top);
+        }
+        let mut left_index = 0;
+        let mut right_index = 0;
+        for (i, line) in lines.clone().enumerate() {
+            if has_left {
+                let r = border.left.chars();
+                left_index += 1;
+                if left_index >= border.left.len() {
+                    left_index = 0;
+                }
+                compiled_string.push_str(&style_border(&format!("{:?}", r), left_fg, left_bg))
+            }
+            compiled_string.push_str(&line);
+            if has_right {
+                let r = border.right.chars();
+                right_index += 1;
+                if right_index >= border.right.len() {
+                    right_index = 0;
+                }
+                compiled_string.push_str(&style_border(&format!("{:?}", r), right_fg, right_bg))
+            }
+            if i < lines.clone().count() - 1 {
+                compiled_string.push('\n')
+            }
+        }
+
+        if has_bottom {
+            let mut bottom = render_horizontal_edge(
+                &border.bottom_left,
+                &border.bottom,
+                &border.bottom_right,
+                width,
+            );
+            bottom = style_border(&bottom, bottom_fg, bottom_bg);
+            compiled_string.push_str(&bottom);
+        }
+
         return "".to_string();
     }
 
@@ -390,13 +487,13 @@ impl Style {
                 if use_space_styler {
                     for ch in line.chars() {
                         if ch.is_whitespace() {
-                            temp.push_str(&Style::style_char(&te_space, ch));
+                            temp.push_str(&format!("{}{}{}", te_space, ch, Attribute::Reset));
                             continue;
                         }
-                        temp.push_str(&Style::style_char(&te, ch));
+                        temp.push_str(&format!("{}{}{}", te, ch, Attribute::Reset));
                     }
                 } else {
-                    temp.push_str(&Style::style(&te, line))
+                    temp.push_str(&format!("{}{}{}", te, line, Attribute::Reset))
                 }
 
                 if i != l.clone().count() - 1 {
@@ -433,7 +530,9 @@ impl Style {
             }
         }
 
-        if !inline {}
+        if !inline {
+            compiled_string = self.apply_border(&compiled_string);
+        }
 
         compiled_string
     }
@@ -469,4 +568,25 @@ fn which_sides(values: &[i32]) -> (i32, i32, i32, i32) {
         _ => {}
     }
     return (top, right, bottom, left);
+}
+
+fn style_border(border: &str, fg: Colour, bg: Colour) -> String {
+    let mut compiled_string = String::new();
+    if fg == Colour::default() && bg == Colour::default() {
+        return border.to_string();
+    }
+
+    if fg != Colour::default() {
+        if let ColorValue::Color(val) = fg.color {
+            compiled_string.push_str(&SetForegroundColor(val).to_string());
+        }
+    }
+
+    if bg != Colour::default() {
+        if let ColorValue::Color(val) = bg.color {
+            compiled_string.push_str(&SetForegroundColor(val).to_string());
+        }
+    }
+    compiled_string.push_str(&Attribute::Reset.to_string());
+    compiled_string
 }

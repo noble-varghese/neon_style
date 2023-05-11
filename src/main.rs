@@ -9,11 +9,12 @@ It has survived not only five centuries, but also the leap into electronic types
 remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset
 sheets containing Lorem Ipsum passages, and more recently with desktop publishing software 
 like Aldus PageMaker including versions of Lorem Ipsum"
-    .to_string();
+        .to_string();
     let mut style = Style::new_style()
         .bold(true)
         .underline(true)
         .underline_spaces(false)
-        .padding([10, 10, 10, 10]).faint(true);
+        .padding([10, 10, 10, 10])
+        .faint(true);
     println!("Yes this is the output - \n{}", style.render(&mut strs));
 }

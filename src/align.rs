@@ -67,6 +67,12 @@ pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> Stri
                 Position::Center => {
                     let left = short_amount / 2;
                     let right = left + short_amount % 2;
+
+                    let left_spaces = " ".repeat(left);
+                    let right_spaces = " ".repeat(right);
+
+                    let f = format!("{}{}{}", left_spaces, line, right_spaces);
+                    temp.push_str(&f);
                 }
                 Position::Right => {
                     let sp = " ".repeat(short_amount);
