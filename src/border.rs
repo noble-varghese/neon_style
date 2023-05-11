@@ -12,18 +12,107 @@ pub struct Border {
     pub bottom_left: String,
 }
 
-impl Border {
-    pub fn new() -> Self {
-        Self {
-            top: String::new(),
-            bottom: String::new(),
-            left: String::new(),
-            right: String::new(),
-            top_left: String::new(),
-            top_right: String::new(),
-            bottom_right: String::new(),
-            bottom_left: String::new(),
-        }
+pub fn normal_border() -> Border {
+    Border {
+        top: String::from("─"),
+        bottom: String::from("─"),
+        left: String::from("│"),
+        right: String::from("│"),
+        top_left: String::from("┌"),
+        top_right: String::from("┐"),
+        bottom_left: String::from("└"),
+        bottom_right: String::from("┘"),
+    }
+}
+
+pub fn rounded_border() -> Border {
+    Border {
+        top: String::from("─"),
+        bottom: String::from("─"),
+        left: String::from("│"),
+        right: String::from("│"),
+        top_left: String::from("╭"),
+        top_right: String::from("╮"),
+        bottom_left: String::from("╰"),
+        bottom_right: String::from("╯"),
+    }
+}
+
+pub fn block_border() -> Border {
+    Border {
+        top: String::from("█"),
+        bottom: String::from("█"),
+        left: String::from("█"),
+        right: String::from("█"),
+        top_left: String::from("█"),
+        top_right: String::from("█"),
+        bottom_left: String::from("█"),
+        bottom_right: String::from("█"),
+    }
+}
+
+pub fn outer_half_block_border() -> Border {
+    Border {
+        top: String::from("▀"),
+        bottom: String::from("▄"),
+        left: String::from("▌"),
+        right: String::from("▐"),
+        top_left: String::from("▛"),
+        top_right: String::from("▜"),
+        bottom_left: String::from("▙"),
+        bottom_right: String::from("▟"),
+    }
+}
+
+pub fn inner_half_block_border() -> Border {
+    Border {
+        top: "▄".into(),
+        bottom: "▀".into(),
+        left: "▐".into(),
+        right: "▌".into(),
+        top_left: "▗".into(),
+        top_right: "▖".into(),
+        bottom_left: "▝".into(),
+        bottom_right: "▘".into(),
+    }
+}
+
+pub fn thick_border() -> Border {
+    Border {
+        top: "━".into(),
+        bottom: "━".into(),
+        left: "┃".into(),
+        right: "┃".into(),
+        top_left: "┏".into(),
+        top_right: "┓".into(),
+        bottom_left: "┗".into(),
+        bottom_right: "┛".into(),
+    }
+}
+
+pub fn double_border() -> Border {
+    Border {
+        top: "═".to_string(),
+        bottom: "═".to_string(),
+        left: "║".to_string(),
+        right: "║".to_string(),
+        top_left: "╔".to_string(),
+        top_right: "╗".to_string(),
+        bottom_left: "╚".to_string(),
+        bottom_right: "╝".to_string(),
+    }
+}
+
+pub fn hidden_border() -> Border {
+    Border {
+        top: " ".into(),
+        bottom: " ".into(),
+        left: " ".into(),
+        right: " ".into(),
+        top_left: " ".into(),
+        top_right: " ".into(),
+        bottom_left: " ".into(),
+        bottom_right: " ".into(),
     }
 }
 
@@ -49,14 +138,17 @@ pub fn render_horizontal_edge(left: &str, mut middle: &str, right: &str, width: 
 
     let mut j = 0;
     let mut i = left_width + right_width;
-    let chars: Vec<char> = middle.chars().collect();
-    while i < left_width + right_width + width {
-        compiled_string.push_str(&chars[j].to_string());
+    let chars: Vec<String> = middle.chars().map(|c| c.to_string()).collect();
+    println!("Left: {} Right: {}", left, right);
+    compiled_string.push_str(left);
+
+    while i < width {
+        compiled_string.push_str(&chars[j]);
         j += 1;
         if j >= chars.len() {
             j = 0
         }
-        i += display_width(&chars[j].to_string());
+        i += display_width(&chars[j]);
     }
     compiled_string.push_str(right);
 

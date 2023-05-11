@@ -14,7 +14,8 @@ like Aldus PageMaker including versions of Lorem Ipsum"
         .bold(true)
         .underline(true)
         .underline_spaces(false)
-        .padding([10, 10, 10, 10])
-        .faint(true);
+        .padding(&[1, 1])
+        .faint(true)
+        .border(neon_style::normal_border(), &[true, true, true, true]);
     println!("Yes this is the output - \n{}", style.render(&mut strs));
 }

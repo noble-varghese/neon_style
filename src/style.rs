@@ -180,8 +180,11 @@ impl Style {
         self
     }
 
-    pub fn padding(mut self, values: [i32; 4]) -> Self {
-        let (top, right, bottom, left) = which_sides(&values);
+    pub fn padding(mut self, values: &[i32]) -> Self {
+        if values.len() > 4 {
+            panic!("Cannot provide more than 4 values for padding");
+        }
+        let (top, right, bottom, left) = which_sides_int(&values);
         println!(
             "Values are top: {}, right: {}, bottom: {}, left: {}",
             top, right, bottom, left
@@ -211,6 +214,16 @@ impl Style {
 
     pub fn padding_left(mut self, value: i32) -> Self {
         self.set(Props::PaddingLeftKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn border(mut self, b: Border, sides: &[bool]) -> Self {
+        self.set(Props::BorderStyleKey, Value::Border(b));
+        let (top, right, bottom, left) = which_sides_bool(&sides);
+        self.set(Props::BorderTopKey, Value::Bool(top));
+        self.set(Props::BorderBottomKey, Value::Bool(bottom));
+        self.set(Props::BorderLeftKey, Value::Bool(left));
+        self.set(Props::BorderRightKey, Value::Bool(right));
         self
     }
 
@@ -250,6 +263,7 @@ impl Style {
         }
 
         let (lines, mut width) = get_lines(strs);
+        println!("Line len: {}", lines.clone().count()-1);
 
         if has_left {
             if border.left.is_empty() {
@@ -325,26 +339,31 @@ impl Style {
                 render_horizontal_edge(&border.top_left, &border.top, &border.top_right, width);
             top = style_border(&top, top_fg, top_bg);
             compiled_string.push_str(&top);
+            compiled_string.push('\n');
         }
         let mut left_index = 0;
         let mut right_index = 0;
         for (i, line) in lines.clone().enumerate() {
+            println!("Lines number {}: {}", i, line);
             if has_left {
-                let r = border.left.chars();
+                let left_chars: Vec<String> = border.left.chars().map(|c| c.to_string()).collect();
+                let r = &left_chars[left_index];
                 left_index += 1;
-                if left_index >= border.left.len() {
+                if left_index >= left_chars.len() {
                     left_index = 0;
                 }
-                compiled_string.push_str(&style_border(&format!("{:?}", r), left_fg, left_bg))
+                compiled_string.push_str(&style_border(&r, left_fg, left_bg))
             }
             compiled_string.push_str(&line);
             if has_right {
-                let r = border.right.chars();
+                let right_chars: Vec<String> =
+                    border.right.chars().map(|c| c.to_string()).collect();
+                let r = &right_chars[right_index];
                 right_index += 1;
-                if right_index >= border.right.len() {
+                if right_index >= right_chars.len() {
                     right_index = 0;
                 }
-                compiled_string.push_str(&style_border(&format!("{:?}", r), right_fg, right_bg))
+                compiled_string.push_str(&style_border(&r, right_fg, right_bg))
             }
             if i < lines.clone().count() - 1 {
                 compiled_string.push('\n')
@@ -362,7 +381,7 @@ impl Style {
             compiled_string.push_str(&bottom);
         }
 
-        return "".to_string();
+        return compiled_string;
     }
 
     fn is_set(&self, key: Props) -> bool {
@@ -538,7 +557,7 @@ impl Style {
     }
 }
 
-fn which_sides(values: &[i32]) -> (i32, i32, i32, i32) {
+fn which_sides_int(values: &[i32]) -> (i32, i32, i32, i32) {
     let [mut top, mut bottom, mut left, mut right] = [0, 0, 0, 0];
     match values.len() {
         1 => {
@@ -589,4 +608,36 @@ fn style_border(border: &str, fg: Colour, bg: Colour) -> String {
     }
     compiled_string.push_str(&Attribute::Reset.to_string());
     compiled_string
+}
+
+fn which_sides_bool(values: &[bool]) -> (bool, bool, bool, bool) {
+    let [mut top, mut bottom, mut left, mut right] = [false, false, false, false];
+    match values.len() {
+        1 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[0];
+            right = values[0];
+        }
+        2 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[1];
+            right = values[1];
+        }
+        3 => {
+            top = values[0];
+            left = values[1];
+            right = values[1];
+            bottom = values[2];
+        }
+        4 => {
+            top = values[0];
+            right = values[1];
+            bottom = values[2];
+            left = values[3];
+        }
+        _ => {}
+    }
+    return (top, right, bottom, left);
 }
