@@ -40,14 +40,12 @@ pub fn pad_right(strs: &str, n: usize, style: Option<&String>) -> String {
 
 pub fn pad_top(strs: &str, n: usize) -> String {
     let mut sp = "\n".repeat(n);
-    sp.push_str(&strs);
+    sp = format!("{sp}{strs}");
     sp
 }
 
 pub fn pad_bottom(strs: &str, n: usize) -> String {
-    let mut temp = String::new();
-    let sp = "\n".repeat(n);
-    temp.push_str(strs);
-    temp.push_str(&sp);
-    temp
+    let mut sp = "\n".repeat(n);
+    sp = format!("{strs}{sp}");
+    sp
 }

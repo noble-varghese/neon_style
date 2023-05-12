@@ -22,8 +22,7 @@ pub fn align_text_vertical(strs: &mut String, pos: Position, height: usize) -> S
     let str_height = strs
         .chars()
         .map(|ch| ch == '\n')
-        .fold(0, |acc, x| if x { acc + 1 } else { acc })
-        + 1;
+        .fold(0, |acc, x| if x { acc + 1 } else { acc });
     if height < str_height {
         return strs.to_string();
     }
