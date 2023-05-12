@@ -1,5 +1,5 @@
 use crate::position::Position;
-use std::{cmp, str::Split};
+use std::str::Split;
 use textwrap::core::display_width;
 
 pub fn get_lines(s: &str) -> (Split<char>, usize) {
@@ -59,8 +59,11 @@ pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> Stri
     let mut temp = String::new();
     for (i, line) in lines.clone().enumerate() {
         let line_width = display_width(line);
+
         let mut short_amount = widest_line - line_width;
-        short_amount = cmp::max(0, width - (short_amount + line_width));
+        if width >= (short_amount + line_width) {
+            short_amount = width - (short_amount + line_width);
+        }
 
         if short_amount > 0 {
             match pos {
@@ -76,18 +79,18 @@ pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> Stri
                 }
                 Position::Right => {
                     let sp = " ".repeat(short_amount);
-                    temp.push_str(&sp);
-                    temp.push_str(strs);
+                    temp.push_str(&format!("{}{}", line, sp));
                 }
                 _ => {
                     // Default case is left orientation.
                     let sp = " ".repeat(short_amount);
-                    temp.push_str(strs);
-                    temp.push_str(&sp);
+                    temp.push_str(&format!("{}{}", line, sp));
                 }
             }
+        } else {
+            temp.push_str(line);
         }
-        if i < lines.clone().count() {
+        if i < lines.clone().count() - 1 {
             temp.push('\n');
         }
     }
