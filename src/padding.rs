@@ -25,7 +25,6 @@ pub fn pad_right(strs: &str, n: usize, style: Option<&String>) -> String {
         return strs.to_string();
     }
     if let Some(st) = style {
-        // println!("-->>> {:?} {}", st, st);
         sp = format!("{}{}", st, sp);
     }
     let mut temp = String::new();
