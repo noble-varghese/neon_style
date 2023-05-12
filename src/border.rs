@@ -139,7 +139,6 @@ pub fn render_horizontal_edge(left: &str, mut middle: &str, right: &str, width: 
     let mut j = 0;
     let mut i = left_width + right_width;
     let chars: Vec<String> = middle.chars().map(|c| c.to_string()).collect();
-    println!("Left: {} Right: {}", left, right);
     compiled_string.push_str(left);
 
     while i < width {
