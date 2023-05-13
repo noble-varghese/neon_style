@@ -1,7 +1,6 @@
 use std::{cmp, collections::HashMap, usize};
 
 use crossterm::style::{Attribute, Color, SetBackgroundColor, SetForegroundColor};
-use textwrap::core::display_width;
 
 use crate::{
     align::{align_text_horizontal, align_text_vertical, get_lines},
@@ -215,7 +214,13 @@ impl Style {
     }
 
     pub fn border(mut self, b: Border, sides: &[bool]) -> Self {
+        if sides.len() > 4 {
+            panic!("Cannot provide more than 4 values for border");
+        }
         self.set(Props::BorderStyleKey, Value::Border(b));
+        if sides.len() == 0 {
+            return self;
+        }
         let (top, right, bottom, left) = which_sides_bool(&sides);
         self.set(Props::BorderTopKey, Value::Bool(top));
         self.set(Props::BorderBottomKey, Value::Bool(bottom));
@@ -224,9 +229,32 @@ impl Style {
         self
     }
 
+    pub fn border_top(mut self, value: bool) -> Self {
+        self.set(Props::BorderTopKey, Value::Bool(value));
+        self
+    }
+
+    pub fn border_bottom(mut self, value: bool) -> Self {
+        self.set(Props::BorderBottomKey, Value::Bool(value));
+        self
+    }
+
+    pub fn border_left(mut self, value: bool) -> Self {
+        self.set(Props::BorderLeftKey, Value::Bool(value));
+        self
+    }
+
+    pub fn border_right(mut self, value: bool) -> Self {
+        self.set(Props::BorderRightKey, Value::Bool(value));
+        self
+    }
+
     pub fn border_foreground(mut self, cols: &[Colour]) -> Self {
         if cols.len() > 4 {
             panic!("Cannot provide more than 4 values for border color");
+        }
+        if cols.len() == 0 {
+            return self;
         }
         let (top, right, bottom, left) = which_sides_color(cols);
         self.set(Props::BorderTopForegroundKey, Value::Color(top));
@@ -261,6 +289,79 @@ impl Style {
     pub fn text_color(mut self, c: Colour) -> Self {
         self.set(Props::TextColorKey, Value::Color(c));
         self
+    }
+
+    pub fn margin(mut self, values: &[i32]) -> Self {
+        if values.len() > 4 {
+            panic!("Cannot provide more than 4 values for margin");
+        }
+        if values.len() == 0 {
+            return self;
+        }
+        let (top, right, bottom, left) = which_sides_int(values);
+        self.set(Props::MarginTopKey, Value::Int(top as usize));
+        self.set(Props::MarginBottomKey, Value::Int(bottom as usize));
+        self.set(Props::MarginRightKey, Value::Int(right as usize));
+        self.set(Props::MarginLeftKey, Value::Int(left as usize));
+        self
+    }
+
+    pub fn margin_top(mut self, value: i32) -> Self {
+        self.set(Props::MarginTopKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_bottom(mut self, value: i32) -> Self {
+        self.set(Props::MarginBottomKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_left(mut self, value: i32) -> Self {
+        self.set(Props::MarginLeftKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_right(mut self, value: i32) -> Self {
+        self.set(Props::MarginRightKey, Value::Int(value as usize));
+        self
+    }
+
+    fn apply_margins(&self, strs: &str, inline: bool) -> String {
+        let mut compiled_string = String::new();
+        compiled_string.push_str(strs);
+
+        let top_margin = self.get_as_int(Props::MarginTopKey);
+        let bottom_margin = self.get_as_int(Props::MarginBottomKey);
+        let right_margin = self.get_as_int(Props::MarginRightKey);
+        let left_margin = self.get_as_int(Props::MarginLeftKey);
+
+        let bgc = self.get_as_color(Props::MarginBackgroundKey);
+        let mut style = None;
+        let mut t = String::new();
+        if bgc != Colour::default() {
+            if let ColorValue::Color(val) = bgc.color {
+                t.push_str(&SetBackgroundColor(val).to_string());
+                style = Some(&t);
+            }
+        }
+
+        compiled_string = pad_left(&compiled_string, left_margin, style);
+        compiled_string = pad_right(&compiled_string, right_margin, style);
+
+        if !inline {
+            let (_, width) = get_lines(&compiled_string);
+            let sp = " ".repeat(width);
+            if top_margin > 0 {
+                let l = format!("{}\n", sp).repeat(top_margin);
+                compiled_string = format!("{}{}", l, compiled_string);
+            }
+            if bottom_margin > 0 {
+                let l = format!("{}\n", sp).repeat(bottom_margin);
+                compiled_string = format!("{}{}", compiled_string, l);
+            }
+        }
+
+        compiled_string.to_string()
     }
 
     fn apply_border(&self, strs: &str) -> String {
@@ -298,20 +399,18 @@ impl Style {
             has_left = true;
         }
 
-        let (lines, mut width) = get_lines(strs);
+        let (lines, width) = get_lines(strs);
 
         if has_left {
             if border.left.is_empty() {
                 border.left = String::from(" ");
             }
-            width += display_width(&border.left);
         }
 
         if has_right {
             if border.right.is_empty() {
                 border.right = String::from(" ");
             }
-            width += display_width(&border.right);
         }
 
         if has_top && has_left && border.top_left.is_empty() {
@@ -643,6 +742,7 @@ impl Style {
 
         if !inline {
             compiled_string = self.apply_border(&compiled_string);
+            compiled_string = self.apply_margins(&compiled_string, inline);
         }
 
         compiled_string
