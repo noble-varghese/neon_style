@@ -23,6 +23,7 @@ fn main() {
         .padding(&[1, 2])
         .background(neon_color::from("#874BFD"))
         .border(tab_border, &[true])
+        .margin(&[4])
         .border_foreground(&[neon_color::from("#FF0000")]);
     println!("{}", style.render(&strs));
 }
