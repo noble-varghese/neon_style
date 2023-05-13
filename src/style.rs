@@ -1,6 +1,6 @@
 use std::{cmp, collections::HashMap, usize};
 
-use crossterm::style::{Attribute, SetForegroundColor};
+use crossterm::style::{Attribute, Color, SetBackgroundColor, SetForegroundColor};
 use textwrap::core::display_width;
 
 use crate::{
@@ -23,6 +23,7 @@ pub enum Props {
     FaintKey,
     ForegroundKey,
     BackgroundKey,
+    TextColorKey,
     WidthKey,
     HeightKey,
     AlignHorizontalKey,
@@ -223,6 +224,45 @@ impl Style {
         self
     }
 
+    pub fn border_foreground(mut self, cols: &[Colour]) -> Self {
+        if cols.len() > 4 {
+            panic!("Cannot provide more than 4 values for border color");
+        }
+        let (top, right, bottom, left) = which_sides_color(cols);
+        self.set(Props::BorderTopForegroundKey, Value::Color(top));
+        self.set(Props::BorderBottomForegroundKey, Value::Color(bottom));
+        self.set(Props::BorderRightForegroundKey, Value::Color(right));
+        self.set(Props::BorderLeftForegroundKey, Value::Color(left));
+        self
+    }
+
+    pub fn border_background(mut self, cols: &[Colour]) -> Self {
+        if cols.len() > 4 {
+            panic!("Cannot provide more than 4 values for border color");
+        }
+        let (top, right, bottom, left) = which_sides_color(cols);
+        self.set(Props::BorderTopBackgroundKey, Value::Color(top));
+        self.set(Props::BorderBottomBackgroundKey, Value::Color(bottom));
+        self.set(Props::BorderRightBackgroundKey, Value::Color(right));
+        self.set(Props::BorderLeftBackgroundKey, Value::Color(left));
+        self
+    }
+
+    pub fn foreground(mut self, c: Colour) -> Self {
+        self.set(Props::ForegroundKey, Value::Color(c));
+        self
+    }
+
+    pub fn background(mut self, c: Colour) -> Self {
+        self.set(Props::BackgroundKey, Value::Color(c));
+        self
+    }
+
+    pub fn text_color(mut self, c: Colour) -> Self {
+        self.set(Props::TextColorKey, Value::Color(c));
+        self
+    }
+
     fn apply_border(&self, strs: &str) -> String {
         let top_set = self.is_set(Props::BorderTopKey);
         let right_set = self.is_set(Props::BorderRightKey);
@@ -415,7 +455,7 @@ impl Style {
         }
         let mut te = String::new();
         let mut te_space = String::new();
-        // let mut te_white_space = String::new();
+        let mut te_white_space = String::new();
 
         let bold = self.get_as_bool(Props::BoldKey, false);
         let italic = self.get_as_bool(Props::ItalicKey, false);
@@ -424,6 +464,10 @@ impl Style {
         let reverse = self.get_as_bool(Props::ReverseKey, false);
         let blink = self.get_as_bool(Props::BlinkKey, false);
         let faint = self.get_as_bool(Props::FaintKey, false);
+
+        let fg = self.get_as_color(Props::ForegroundKey);
+        let bg = self.get_as_color(Props::BackgroundKey);
+        let text_color = self.get_as_color(Props::TextColorKey);
 
         // Text width height and alignment related components.
         let width = self.get_as_int(Props::WidthKey);
@@ -439,12 +483,12 @@ impl Style {
 
         let inline = self.get_as_bool(Props::InlineKey, false);
 
-        // let color_whitespaces = self.get_as_bool(Props::ColorWhitespaceKey, true);
+        let color_whitespaces = self.get_as_bool(Props::ColorWhitespaceKey, true);
         let underline_spaces = underline && self.get_as_bool(Props::UnderlineSpacesKey, true);
         let strikethrough_spaces =
             strikethrough && self.get_as_bool(Props::StrikethroughSpacesKey, true);
 
-        // let style_whitespace = reverse;
+        let style_whitespace = reverse;
         let use_space_styler = !underline_spaces || !strikethrough_spaces;
 
         if bold {
@@ -469,6 +513,40 @@ impl Style {
         }
         if faint {
             te.push_str(&Attribute::Dim.to_string());
+        }
+
+        if text_color != Colour::default() {
+            if let ColorValue::Color(val) = text_color.color {
+                te.push_str(&SetForegroundColor(val).to_string())
+            }
+        }
+
+        if bg != Colour::default() {
+            if let ColorValue::Color(val) = bg.color {
+                te.push_str(&SetBackgroundColor(val).to_string());
+                if color_whitespaces {
+                    te_white_space =
+                        format!("{}{te_white_space}", &SetBackgroundColor(val).to_string());
+                }
+
+                if use_space_styler {
+                    te_space = format!("{}{te_space}", &SetBackgroundColor(val).to_string());
+                }
+            }
+        }
+
+        if fg != Colour::default() {
+            if let ColorValue::Color(val) = fg.color {
+                te.push_str(&SetForegroundColor(val).to_string());
+                if color_whitespaces {
+                    te_white_space =
+                        format!("{}{te_white_space}", &SetForegroundColor(val).to_string());
+                }
+
+                if use_space_styler {
+                    te_space = format!("{}{te_space}", &SetForegroundColor(val).to_string());
+                }
+            }
         }
 
         if underline_spaces {
@@ -507,7 +585,13 @@ impl Style {
                         temp.push_str(&format!("{}{}{}", te, ch, Attribute::Reset));
                     }
                 } else {
-                    temp.push_str(&format!("{}{}{}", te, line, Attribute::Reset))
+                    temp.push_str(&format!(
+                        "{}{}{}{:?}",
+                        te,
+                        line,
+                        Attribute::Reset,
+                        Color::Reset
+                    ))
                 }
 
                 if i != l.clone().count() - 1 {
@@ -519,10 +603,18 @@ impl Style {
 
         if !inline {
             if left_padding > 0 {
-                compiled_string = pad_left(&compiled_string, left_padding);
+                let mut style: Option<&String> = None;
+                if color_whitespaces || style_whitespace {
+                    style = Some(&te_white_space);
+                }
+                compiled_string = pad_left(&compiled_string, left_padding, style);
             }
             if right_padding > 0 {
-                compiled_string = pad_right(&compiled_string, left_padding);
+                let mut style: Option<&String> = None;
+                if color_whitespaces || style_whitespace {
+                    style = Some(&te_white_space);
+                }
+                compiled_string = pad_right(&compiled_string, left_padding, style);
             }
             if top_padding > 0 {
                 compiled_string = pad_top(&compiled_string, top_padding)
@@ -540,7 +632,12 @@ impl Style {
         {
             let num_lines = compiled_string.split('\n').count();
             if !(num_lines == 0 && width == 0) {
-                compiled_string = align_text_horizontal(&compiled_string, horizontal_align, width)
+                let mut style: Option<&String> = None;
+                if color_whitespaces || style_whitespace {
+                    style = Some(&te_white_space);
+                }
+                compiled_string =
+                    align_text_horizontal(&compiled_string, horizontal_align, width, style)
             }
         }
 
@@ -598,15 +695,53 @@ fn style_border(border: &str, fg: Colour, bg: Colour) -> String {
 
     if bg != Colour::default() {
         if let ColorValue::Color(val) = bg.color {
-            compiled_string.push_str(&SetForegroundColor(val).to_string());
+            compiled_string.push_str(&SetBackgroundColor(val).to_string());
         }
     }
+    compiled_string.push_str(border);
     compiled_string.push_str(&Attribute::Reset.to_string());
     compiled_string
 }
 
 fn which_sides_bool(values: &[bool]) -> (bool, bool, bool, bool) {
     let [mut top, mut bottom, mut left, mut right] = [false, false, false, false];
+    match values.len() {
+        1 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[0];
+            right = values[0];
+        }
+        2 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[1];
+            right = values[1];
+        }
+        3 => {
+            top = values[0];
+            left = values[1];
+            right = values[1];
+            bottom = values[2];
+        }
+        4 => {
+            top = values[0];
+            right = values[1];
+            bottom = values[2];
+            left = values[3];
+        }
+        _ => {}
+    }
+    return (top, right, bottom, left);
+}
+
+fn which_sides_color(values: &[Colour]) -> (Colour, Colour, Colour, Colour) {
+    let [mut top, mut bottom, mut left, mut right] = [
+        Colour::default(),
+        Colour::default(),
+        Colour::default(),
+        Colour::default(),
+    ];
     match values.len() {
         1 => {
             top = values[0];

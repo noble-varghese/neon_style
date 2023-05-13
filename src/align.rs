@@ -1,4 +1,5 @@
 use crate::position::Position;
+use crossterm::style::Attribute;
 use std::str::Split;
 use textwrap::core::display_width;
 
@@ -54,16 +55,23 @@ pub fn align_text_vertical(strs: &mut String, pos: Position, height: usize) -> S
     return strs.to_string();
 }
 
-pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> String {
+pub fn align_text_horizontal(
+    strs: &String,
+    pos: Position,
+    width: usize,
+    style: Option<&String>,
+) -> String {
     let (lines, widest_line) = get_lines(strs);
     let mut temp = String::new();
-    for (i, line) in lines.clone().enumerate() {
-        let line_width = display_width(line);
+    for (i, l) in lines.clone().enumerate() {
+        let line_width = display_width(&l);
 
         let mut short_amount = widest_line - line_width;
         if width >= (short_amount + line_width) {
             short_amount = width - (short_amount + line_width);
         }
+
+        let mut line = l.to_string();
 
         if short_amount > 0 {
             match pos {
@@ -71,25 +79,34 @@ pub fn align_text_horizontal(strs: &String, pos: Position, width: usize) -> Stri
                     let left = short_amount / 2;
                     let right = left + short_amount % 2;
 
-                    let left_spaces = " ".repeat(left);
-                    let right_spaces = " ".repeat(right);
+                    let mut left_spaces = " ".repeat(left);
+                    let mut right_spaces = " ".repeat(right);
 
-                    let f = format!("{}{}{}", left_spaces, line, right_spaces);
-                    temp.push_str(&f);
+                    if let Some(st) = style {
+                        left_spaces = format!("{}{}", st, left_spaces);
+                        right_spaces = format!("{}{}", st, right_spaces);
+                    }
+
+                    line = format!("{}{}{}", left_spaces, line, right_spaces);
                 }
                 Position::Right => {
-                    let sp = " ".repeat(short_amount);
-                    temp.push_str(&format!("{}{}", line, sp));
+                    let mut sp = " ".repeat(short_amount);
+                    if let Some(st) = style {
+                        sp = format!("{}{}", st, sp);
+                    }
+                    line = format!("{}{}", line, sp);
                 }
                 _ => {
                     // Default case is left orientation.
-                    let sp = " ".repeat(short_amount);
-                    temp.push_str(&format!("{}{}", line, sp));
+                    let mut sp = " ".repeat(short_amount);
+                    if let Some(st) = style {
+                        sp = format!("{}{}", st, sp);
+                    }
+                    line = format!("{}{}", line, sp);
                 }
             }
-        } else {
-            temp.push_str(line);
         }
+        temp.push_str(&format!("{}{}", line, &Attribute::Reset.to_string()));
         if i < lines.clone().count() - 1 {
             temp.push('\n');
         }
