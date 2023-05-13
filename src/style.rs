@@ -224,6 +224,30 @@ impl Style {
         self
     }
 
+    pub fn border_foreground(mut self, cols: &[Colour]) -> Self {
+        if cols.len() > 4 {
+            panic!("Cannot provide more than 4 values for border color");
+        }
+        let (top, right, bottom, left) = which_sides_color(cols);
+        self.set(Props::BorderTopForegroundKey, Value::Color(top));
+        self.set(Props::BorderBottomForegroundKey, Value::Color(bottom));
+        self.set(Props::BorderRightForegroundKey, Value::Color(right));
+        self.set(Props::BorderLeftForegroundKey, Value::Color(left));
+        self
+    }
+
+    pub fn border_background(mut self, cols: &[Colour]) -> Self {
+        if cols.len() > 4 {
+            panic!("Cannot provide more than 4 values for border color");
+        }
+        let (top, right, bottom, left) = which_sides_color(cols);
+        self.set(Props::BorderTopBackgroundKey, Value::Color(top));
+        self.set(Props::BorderBottomBackgroundKey, Value::Color(bottom));
+        self.set(Props::BorderRightBackgroundKey, Value::Color(right));
+        self.set(Props::BorderLeftBackgroundKey, Value::Color(left));
+        self
+    }
+
     pub fn foreground(mut self, c: Colour) -> Self {
         self.set(Props::ForegroundKey, Value::Color(c));
         self
@@ -671,15 +695,53 @@ fn style_border(border: &str, fg: Colour, bg: Colour) -> String {
 
     if bg != Colour::default() {
         if let ColorValue::Color(val) = bg.color {
-            compiled_string.push_str(&SetForegroundColor(val).to_string());
+            compiled_string.push_str(&SetBackgroundColor(val).to_string());
         }
     }
+    compiled_string.push_str(border);
     compiled_string.push_str(&Attribute::Reset.to_string());
     compiled_string
 }
 
 fn which_sides_bool(values: &[bool]) -> (bool, bool, bool, bool) {
     let [mut top, mut bottom, mut left, mut right] = [false, false, false, false];
+    match values.len() {
+        1 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[0];
+            right = values[0];
+        }
+        2 => {
+            top = values[0];
+            bottom = values[0];
+            left = values[1];
+            right = values[1];
+        }
+        3 => {
+            top = values[0];
+            left = values[1];
+            right = values[1];
+            bottom = values[2];
+        }
+        4 => {
+            top = values[0];
+            right = values[1];
+            bottom = values[2];
+            left = values[3];
+        }
+        _ => {}
+    }
+    return (top, right, bottom, left);
+}
+
+fn which_sides_color(values: &[Colour]) -> (Colour, Colour, Colour, Colour) {
+    let [mut top, mut bottom, mut left, mut right] = [
+        Colour::default(),
+        Colour::default(),
+        Colour::default(),
+        Colour::default(),
+    ];
     match values.len() {
         1 => {
             top = values[0];

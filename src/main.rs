@@ -22,6 +22,7 @@ fn main() {
         .underline_spaces(false)
         .padding(&[1, 2])
         .background(neon_color::from("#874BFD"))
-        .border(tab_border, &[true]);
+        .border(tab_border, &[true])
+        .border_foreground(&[neon_color::from("#FF0000")]);
     println!("{}", style.render(&strs));
 }
