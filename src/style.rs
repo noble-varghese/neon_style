@@ -223,6 +223,26 @@ impl Style {
         self
     }
 
+    pub fn border_top(mut self, value: i32) -> Self {
+        self.set(Props::BorderTopKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn border_bottom(mut self, value: i32) -> Self {
+        self.set(Props::BorderBottomKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn border_left(mut self, value: i32) -> Self {
+        self.set(Props::BorderLeftKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn border_right(mut self, value: i32) -> Self {
+        self.set(Props::BorderRightKey, Value::Int(value as usize));
+        self
+    }
+
     pub fn border_foreground(mut self, cols: &[Colour]) -> Self {
         if cols.len() > 4 {
             panic!("Cannot provide more than 4 values for border color");
@@ -268,6 +288,25 @@ impl Style {
         self.set(Props::MarginBottomKey, Value::Int(bottom as usize));
         self.set(Props::MarginRightKey, Value::Int(right as usize));
         self.set(Props::MarginLeftKey, Value::Int(left as usize));
+        self
+    }
+    pub fn margin_top(mut self, value: i32) -> Self {
+        self.set(Props::MarginTopKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_bottom(mut self, value: i32) -> Self {
+        self.set(Props::MarginBottomKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_left(mut self, value: i32) -> Self {
+        self.set(Props::MarginLeftKey, Value::Int(value as usize));
+        self
+    }
+
+    pub fn margin_right(mut self, value: i32) -> Self {
+        self.set(Props::MarginRightKey, Value::Int(value as usize));
         self
     }
 
