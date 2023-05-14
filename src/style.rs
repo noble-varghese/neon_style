@@ -11,7 +11,7 @@ use crate::{
     renderer::Renderer,
 };
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub enum Props {
     BoldKey,
     ItalicKey,
@@ -71,6 +71,7 @@ pub enum Props {
     StrikethroughSpacesKey,
 }
 
+#[derive(Clone)]
 pub enum Value {
     Str(String),
     Bool(bool),
@@ -93,6 +94,15 @@ impl Style {
             rules: HashMap::new(),
             r: None,
         }
+    }
+
+    pub fn copy(self) -> Self {
+        let mut copy = Self::new_style();
+        for (i, v) in &self.rules {
+            copy.rules.insert(i.clone(), v.clone());
+        }
+        copy.value = self.value.clone();
+        self
     }
 
     pub fn get_as_bool(&self, prop: Props, default_val: bool) -> bool {
@@ -545,8 +555,8 @@ impl Style {
         if self.r.is_none() {
             self.r = Some(Renderer::new());
         }
-        if self.value == "" {
-            compiled_string.push_str(&self.value);
+        if self.value != "" {
+            compiled_string = format!("{}{}", self.value, compiled_string);
         }
 
         if self.rules.len() == 0 {
