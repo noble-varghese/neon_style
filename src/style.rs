@@ -1,17 +1,16 @@
 use std::{cmp, collections::HashMap, usize};
 
-use crossterm::style::{Attribute, Color, SetBackgroundColor, SetForegroundColor};
-
 use crate::{
     align::{align_text_horizontal, align_text_vertical, get_lines},
     border::{get_first_char_as_string, render_horizontal_edge, Border},
     color::{ColorValue, Colour},
     padding::{pad_bottom, pad_left, pad_right, pad_top},
     position::Position,
-    renderer::Renderer,
 };
+use crossterm::style::{Attribute, SetBackgroundColor, SetForegroundColor};
+use std::fmt::Write as _;
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub enum Props {
     BoldKey,
     ItalicKey,
@@ -71,6 +70,7 @@ pub enum Props {
     StrikethroughSpacesKey,
 }
 
+#[derive(Clone)]
 pub enum Value {
     Str(String),
     Bool(bool),
@@ -80,10 +80,10 @@ pub enum Value {
     Border(Border),
 }
 
+#[derive(Clone)]
 pub struct Style {
     pub value: String,
     pub rules: HashMap<Props, Value>,
-    pub r: Option<Renderer>,
 }
 
 impl Style {
@@ -91,8 +91,25 @@ impl Style {
         Self {
             value: String::new(),
             rules: HashMap::new(),
-            r: None,
         }
+    }
+
+    pub fn copy(&self) -> Self {
+        let mut copy = Self::new_style();
+        for (i, v) in &self.rules {
+            copy.rules.insert(i.clone(), v.clone());
+        }
+        copy.value = self.value.clone();
+        self.clone()
+    }
+
+    pub fn set_string(mut self, strs: &str) -> Self {
+        self.value = format!("{}{strs}", self.value);
+        self
+    }
+
+    pub fn to_string(self) -> String {
+        self.render(self.value.to_string())
     }
 
     pub fn get_as_bool(&self, prop: Props, default_val: bool) -> bool {
@@ -147,6 +164,40 @@ impl Style {
 
     pub fn italic(mut self, value: bool) -> Self {
         self.set(Props::ItalicKey, Value::Bool(value));
+        self
+    }
+
+    pub fn align(mut self, pos: &[Position]) -> Self {
+        if pos.len() > 2 {
+            panic!("Cannot provide more than 2 values for align");
+        }
+        if pos.len() > 0 {
+            self.set(Props::AlignHorizontalKey, Value::Pos(pos[0]));
+        }
+
+        if pos.len() > 1 {
+            self.set(Props::AlignVerticalKey, Value::Pos(pos[1]));
+        }
+        self
+    }
+
+    pub fn align_horizontal(mut self, pos: Position) -> Self {
+        self.set(Props::AlignHorizontalKey, Value::Pos(pos));
+        self
+    }
+
+    pub fn align_vertical(mut self, pos: Position) -> Self {
+        self.set(Props::AlignVerticalKey, Value::Pos(pos));
+        self
+    }
+
+    pub fn width(mut self, val: i32) -> Self {
+        self.set(Props::WidthKey, Value::Int(val as usize));
+        self
+    }
+
+    pub fn height(mut self, val: i32) -> Self {
+        self.set(Props::HeightKey, Value::Int(val as usize));
         self
     }
 
@@ -473,7 +524,7 @@ impl Style {
                 render_horizontal_edge(&border.top_left, &border.top, &border.top_right, width);
             top = style_border(&top, top_fg, top_bg);
             compiled_string.push_str(&top);
-            compiled_string.push('\n');
+            compiled_string.push_str("\n");
         }
         let mut left_index = 0;
         let mut right_index = 0;
@@ -499,7 +550,7 @@ impl Style {
                 compiled_string.push_str(&style_border(&r, right_fg, right_bg))
             }
             if i < lines.clone().count() - 1 {
-                compiled_string.push('\n')
+                compiled_string.push_str("\n")
             }
         }
 
@@ -511,7 +562,7 @@ impl Style {
                 width,
             );
             bottom = style_border(&bottom, bottom_fg, bottom_bg);
-            compiled_string.push('\n');
+            compiled_string.push_str("\n");
             compiled_string.push_str(&bottom);
         }
 
@@ -537,16 +588,13 @@ impl Style {
         }
     }
 
-    pub fn render(&mut self, strs: &str) -> String {
+    pub fn render(&self, strs: String) -> String {
         // The final compiled string to be returned after all the operations.
         let mut compiled_string = String::new();
-        compiled_string.push_str(strs);
+        compiled_string.push_str(&strs);
 
-        if self.r.is_none() {
-            self.r = Some(Renderer::new());
-        }
-        if self.value == "" {
-            compiled_string.push_str(&self.value);
+        if self.value != "" {
+            compiled_string = format!("{}{}", self.value, compiled_string);
         }
 
         if self.rules.len() == 0 {
@@ -588,7 +636,7 @@ impl Style {
             strikethrough && self.get_as_bool(Props::StrikethroughSpacesKey, true);
 
         let style_whitespace = reverse;
-        let use_space_styler = !underline_spaces || !strikethrough_spaces;
+        let use_space_styler = underline_spaces || strikethrough_spaces;
 
         if bold {
             te.push_str(&Attribute::Bold.to_string());
@@ -657,7 +705,7 @@ impl Style {
         }
 
         if inline {
-            compiled_string = compiled_string.replace('\n', "");
+            compiled_string = compiled_string.replace("\n", "");
         }
 
         // Word wrap feature.
@@ -671,33 +719,28 @@ impl Style {
         // once it goes out of scope.
         {
             let mut temp = String::new();
-            let l = compiled_string.split('\n');
+            let l = compiled_string.split("\n");
             for (i, line) in l.clone().enumerate() {
                 // Identify the spaces and applying the styling separately to the spaces.
                 // This only works for underscores and strikethroughs
                 if use_space_styler {
                     for ch in line.chars() {
                         if ch.is_whitespace() {
-                            temp.push_str(&format!("{}{}{}", te_space, ch, Attribute::Reset));
+                            write!(temp, "{}{}{}", te_space, ch, Attribute::Reset.to_string())
+                                .unwrap();
                             continue;
                         }
-                        temp.push_str(&format!("{}{}{}", te, ch, Attribute::Reset));
+                        write!(temp, "{}{}{}", te, ch, Attribute::Reset.to_string()).unwrap();
                     }
                 } else {
-                    temp.push_str(&format!(
-                        "{}{}{}{:?}",
-                        te,
-                        line,
-                        Attribute::Reset,
-                        Color::Reset
-                    ))
+                    write!(temp, "{}{}{}", te, line, Attribute::Reset.to_string(),).unwrap()
                 }
 
                 if i != l.clone().count() - 1 {
-                    temp.push('\n');
+                    write!(temp, "\n").unwrap();
                 }
             }
-            compiled_string = temp;
+            compiled_string = temp.to_string();
         }
 
         if !inline {
@@ -729,7 +772,7 @@ impl Style {
         }
 
         {
-            let num_lines = compiled_string.split('\n').count();
+            let num_lines = compiled_string.split("\n").count();
             if !(num_lines == 0 && width == 0) {
                 let mut style: Option<&String> = None;
                 if color_whitespaces || style_whitespace {
