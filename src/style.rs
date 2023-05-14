@@ -105,6 +105,15 @@ impl Style {
         self
     }
 
+    pub fn set_string(mut self, strs: &str) -> Self {
+        self.value = format!("{}{strs}", self.value);
+        self
+    }
+
+    pub fn to_string(mut self) -> String {
+        self.render(&self.value.to_string())
+    }
+
     pub fn get_as_bool(&self, prop: Props, default_val: bool) -> bool {
         if self.rules.contains_key(&prop) {
             if let Value::Bool(val) = self.rules.get(&prop).unwrap() {
