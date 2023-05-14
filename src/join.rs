@@ -60,7 +60,7 @@ pub fn join_horizontally(pos: Position, strs: &[String]) -> String {
             compiled_string.push_str(&block[i]);
         }
         if i < blocks[0].len() - 1 {
-            compiled_string.push('\n');
+            compiled_string.push_str("\n");
         }
     }
 
@@ -77,11 +77,12 @@ pub fn join_vertically(pos: Position, strs: &[String]) -> String {
         return strs[0].to_string();
     }
 
-    let blocks = vec![vec![String::new()]; strs.len()];
+    let mut blocks = vec![vec![String::new()]; strs.len()];
     let mut max_width = 0;
 
-    for i in strs {
-        let (_, width) = get_lines(i);
+    for (i, line) in strs.iter().enumerate() {
+        let (lines, width) = get_lines(line);
+        blocks[i] = lines.map(|s| s.to_string()).collect();
         if width > max_width {
             max_width = width;
         }
@@ -107,11 +108,11 @@ pub fn join_vertically(pos: Position, strs: &[String]) -> String {
             }
 
             if j < block.len() - 1 {
-                compiled_string.push('\n');
+                compiled_string.push_str("\n");
             }
         }
-        if i < block.len() - 1 {
-            compiled_string.push('\n');
+        if i < blocks.len() - 1 {
+            compiled_string.push_str("\n");
         }
     }
 

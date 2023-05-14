@@ -3,8 +3,8 @@ use crossterm::style::Attribute;
 use std::str::Split;
 use textwrap::core::display_width;
 
-pub fn get_lines(s: &str) -> (Split<char>, usize) {
-    let lines = s.split('\n');
+pub fn get_lines(s: &str) -> (Split<&str>, usize) {
+    let lines = s.split("\n");
     let mut widest = 0;
     for line in lines.clone() {
         // This gives us the printable width of string.
@@ -108,7 +108,7 @@ pub fn align_text_horizontal(
         }
         temp.push_str(&format!("{}{}", line, &Attribute::Reset.to_string()));
         if i < lines.clone().count() - 1 {
-            temp.push('\n');
+            temp.push_str("\n");
         }
     }
     return temp;

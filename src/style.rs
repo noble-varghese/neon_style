@@ -110,8 +110,8 @@ impl Style {
         self
     }
 
-    pub fn to_string(mut self) -> String {
-        self.render(&self.value.to_string())
+    pub fn to_string(self) -> String {
+        self.render(self.value.to_string())
     }
 
     pub fn get_as_bool(&self, prop: Props, default_val: bool) -> bool {
@@ -526,7 +526,7 @@ impl Style {
                 render_horizontal_edge(&border.top_left, &border.top, &border.top_right, width);
             top = style_border(&top, top_fg, top_bg);
             compiled_string.push_str(&top);
-            compiled_string.push('\n');
+            compiled_string.push_str("\n");
         }
         let mut left_index = 0;
         let mut right_index = 0;
@@ -552,7 +552,7 @@ impl Style {
                 compiled_string.push_str(&style_border(&r, right_fg, right_bg))
             }
             if i < lines.clone().count() - 1 {
-                compiled_string.push('\n')
+                compiled_string.push_str("\n")
             }
         }
 
@@ -564,7 +564,7 @@ impl Style {
                 width,
             );
             bottom = style_border(&bottom, bottom_fg, bottom_bg);
-            compiled_string.push('\n');
+            compiled_string.push_str("\n");
             compiled_string.push_str(&bottom);
         }
 
@@ -590,14 +590,14 @@ impl Style {
         }
     }
 
-    pub fn render(&mut self, strs: &str) -> String {
+    pub fn render(&self, strs: String) -> String {
         // The final compiled string to be returned after all the operations.
         let mut compiled_string = String::new();
-        compiled_string.push_str(strs);
+        compiled_string.push_str(&strs);
 
-        if self.r.is_none() {
-            self.r = Some(Renderer::new());
-        }
+        // if self.r.is_none() {
+        //     self.r = Some(Renderer::new());
+        // }
         if self.value != "" {
             compiled_string = format!("{}{}", self.value, compiled_string);
         }
@@ -710,7 +710,7 @@ impl Style {
         }
 
         if inline {
-            compiled_string = compiled_string.replace('\n', "");
+            compiled_string = compiled_string.replace("\n", "");
         }
 
         // Word wrap feature.
@@ -724,7 +724,7 @@ impl Style {
         // once it goes out of scope.
         {
             let mut temp = String::new();
-            let l = compiled_string.split('\n');
+            let l = compiled_string.split("\n");
             for (i, line) in l.clone().enumerate() {
                 // Identify the spaces and applying the styling separately to the spaces.
                 // This only works for underscores and strikethroughs
@@ -747,7 +747,7 @@ impl Style {
                 }
 
                 if i != l.clone().count() - 1 {
-                    temp.push('\n');
+                    temp.push_str("\n");
                 }
             }
             compiled_string = temp;
@@ -782,7 +782,7 @@ impl Style {
         }
 
         {
-            let num_lines = compiled_string.split('\n').count();
+            let num_lines = compiled_string.split("\n").count();
             if !(num_lines == 0 && width == 0) {
                 let mut style: Option<&String> = None;
                 if color_whitespaces || style_whitespace {

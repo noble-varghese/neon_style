@@ -9,11 +9,11 @@ pub fn pad_left(strs: &str, n: usize, style: Option<&String>) -> String {
         sp = format!("{}{}", st, sp);
     }
     let mut temp = String::new();
-    let lines = strs.split('\n');
+    let lines = strs.split("\n");
     for (i, line) in lines.clone().enumerate() {
         temp.push_str(&format!("{}{}{}", &sp, line, &Attribute::Reset.to_string()));
         if i != lines.clone().count() - 1 {
-            temp.push('\n');
+            temp.push_str("\n");
         }
     }
     return temp;
@@ -28,11 +28,11 @@ pub fn pad_right(strs: &str, n: usize, style: Option<&String>) -> String {
         sp = format!("{}{}", st, sp);
     }
     let mut temp = String::new();
-    let lines = strs.split('\n');
+    let lines = strs.split("\n");
     for (i, line) in lines.clone().enumerate() {
         temp.push_str(&format!("{}{}{}", line, &sp, &Attribute::Reset.to_string()));
         if i != lines.clone().count() - 1 {
-            temp.push('\n');
+            temp.push_str("\n");
         }
     }
     return temp;

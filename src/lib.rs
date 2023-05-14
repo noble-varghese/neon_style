@@ -1,10 +1,10 @@
-pub mod style;
 pub mod align;
-pub mod color;
 pub mod border;
+pub mod color;
 pub mod padding;
 pub mod position;
 pub mod renderer;
+pub mod style;
 pub use color::Colour as Color;
 
 pub use border::Border;
@@ -15,3 +15,5 @@ pub use border::{
 
 pub mod join;
 pub use join::{join_horizontally, join_vertically};
+
+pub use position::Position;
