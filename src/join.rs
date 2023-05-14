@@ -1,6 +1,8 @@
+use textwrap::core::display_width;
+
 use crate::{align::get_lines, position::Position};
 
-pub fn join_horizontal(pos: Position, strs: &[String]) -> String {
+pub fn join_horizontally(pos: Position, strs: &[String]) -> String {
     let mut compiled_string = String::new();
 
     if strs.len() == 0 {
@@ -37,7 +39,7 @@ pub fn join_horizontal(pos: Position, strs: &[String]) -> String {
                 // cloned returns the owned values. The rev returns the references after reversing.
                 blocks[i].extend(extra_lines.iter().cloned().rev());
             }
-            _ => {
+            Position::Center | _ => {
                 // Split in the middle and add it to the top and bottom.
                 let (mut top, mut bottom) = (
                     vec![String::new(); (max_height - block.len()) / 2],
@@ -58,6 +60,57 @@ pub fn join_horizontal(pos: Position, strs: &[String]) -> String {
             compiled_string.push_str(&block[i]);
         }
         if i < blocks[0].len() - 1 {
+            compiled_string.push('\n');
+        }
+    }
+
+    compiled_string
+}
+
+pub fn join_vertically(pos: Position, strs: &[String]) -> String {
+    let mut compiled_string = String::new();
+    if strs.len() == 0 {
+        return compiled_string;
+    }
+
+    if strs.len() == 1 {
+        return strs[0].to_string();
+    }
+
+    let blocks = vec![vec![String::new()]; strs.len()];
+    let mut max_width = 0;
+
+    for i in strs {
+        let (_, width) = get_lines(i);
+        if width > max_width {
+            max_width = width;
+        }
+    }
+
+    for (i, block) in blocks.clone().iter().enumerate() {
+        for (j, line) in block.iter().enumerate() {
+            let w = max_width - display_width(line);
+            match pos {
+                Position::Left => {
+                    compiled_string.push_str(&line);
+                    compiled_string.push_str(&" ".repeat(w));
+                }
+                Position::Right => {
+                    compiled_string.push_str(&" ".repeat(w));
+                    compiled_string.push_str(&line);
+                }
+                Position::Center | _ => {
+                    compiled_string.push_str(&" ".repeat(w / 2));
+                    compiled_string.push_str(&line);
+                    compiled_string.push_str(&" ".repeat(w / 2));
+                }
+            }
+
+            if j < block.len() - 1 {
+                compiled_string.push('\n');
+            }
+        }
+        if i < block.len() - 1 {
             compiled_string.push('\n');
         }
     }
