@@ -198,6 +198,11 @@ impl Style {
         self
     }
 
+    pub fn height(mut self, val: i32) -> Self {
+        self.set(Props::HeightKey, Value::Int(val as usize));
+        self
+    }
+
     pub fn underline(mut self, value: bool) -> Self {
         self.set(Props::UnderlineKey, Value::Bool(value));
         self
