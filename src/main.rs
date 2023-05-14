@@ -37,13 +37,14 @@ fn main() {
 
     let button_style = Style::new_style()
         .foreground(neon_color::from("#FFF7DB"))
-        .background(neon_color::from("#888B7E"))
-        .margin_right(2)
-        .underline(true);
-
-    let active_button_style = Style::new_style()
-        .foreground(neon_color::from("#FFF7DB"))
         .background(neon_color::from("#F25D94"))
+        .padding(&[0, 3])
+        .margin_top(1);
+
+    let active_button_style = button_style
+        .copy()
+        .foreground(neon_color::from("#FFF7DB"))
+        .background(neon_color::from("#888B7E"))
         .margin_right(2)
         .underline(true);
 
@@ -51,20 +52,14 @@ fn main() {
         .width(50)
         .text_color(neon_color::from("#FF0000"))
         .align(&[Position::Center])
-        .render("Are you sure you want to eat marmalade?".into());
+        .render("Are you sure you want exit".into());
 
-    // let ok_button = active_button_style.render("OK".into());
-    // let cancel_button = button_style.render("Cancel".into());
+    let ok_button = active_button_style.render("Yes".into());
+    let cancel_button = button_style.render("Cancel".into());
 
-    // let buttons = neon_style::join_horizontally(Position::Top, &[ok_button, cancel_button]);
-    // // println!("{buttons}");
+    let buttons = neon_style::join_horizontally(Position::Top, &[ok_button, cancel_button]);
 
-    // let ui = neon_style::join_vertically(Position::Center, &[question, buttons]);
-    // println!("{}", ui);
-    let questionair = Style::new_style()
-        .border(rounded_border(), &[true])
-        .border_foreground(&[neon_color::from("#874BFD")])
-        .padding(&[1, 0])
-        .render(question);
+    let ui = neon_style::join_vertically(Position::Center, &[question, buttons]);
+    let questionair = dialogue_box.render(ui);
     println!("{}", questionair.to_string());
 }

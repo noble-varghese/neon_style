@@ -1,15 +1,14 @@
 use std::{cmp, collections::HashMap, usize};
 
-use crossterm::style::{Attribute, Color, SetBackgroundColor, SetForegroundColor};
-
 use crate::{
     align::{align_text_horizontal, align_text_vertical, get_lines},
     border::{get_first_char_as_string, render_horizontal_edge, Border},
     color::{ColorValue, Colour},
     padding::{pad_bottom, pad_left, pad_right, pad_top},
     position::Position,
-    renderer::Renderer,
 };
+use crossterm::style::{Attribute, SetBackgroundColor, SetForegroundColor};
+use std::fmt::Write as _;
 
 #[derive(Eq, Hash, PartialEq, Clone)]
 pub enum Props {
@@ -81,10 +80,10 @@ pub enum Value {
     Border(Border),
 }
 
+#[derive(Clone)]
 pub struct Style {
     pub value: String,
     pub rules: HashMap<Props, Value>,
-    pub r: Option<Renderer>,
 }
 
 impl Style {
@@ -92,17 +91,16 @@ impl Style {
         Self {
             value: String::new(),
             rules: HashMap::new(),
-            r: None,
         }
     }
 
-    pub fn copy(self) -> Self {
+    pub fn copy(&self) -> Self {
         let mut copy = Self::new_style();
         for (i, v) in &self.rules {
             copy.rules.insert(i.clone(), v.clone());
         }
         copy.value = self.value.clone();
-        self
+        self.clone()
     }
 
     pub fn set_string(mut self, strs: &str) -> Self {
@@ -595,9 +593,6 @@ impl Style {
         let mut compiled_string = String::new();
         compiled_string.push_str(&strs);
 
-        // if self.r.is_none() {
-        //     self.r = Some(Renderer::new());
-        // }
         if self.value != "" {
             compiled_string = format!("{}{}", self.value, compiled_string);
         }
@@ -641,7 +636,7 @@ impl Style {
             strikethrough && self.get_as_bool(Props::StrikethroughSpacesKey, true);
 
         let style_whitespace = reverse;
-        let use_space_styler = !underline_spaces || !strikethrough_spaces;
+        let use_space_styler = underline_spaces || strikethrough_spaces;
 
         if bold {
             te.push_str(&Attribute::Bold.to_string());
@@ -731,26 +726,21 @@ impl Style {
                 if use_space_styler {
                     for ch in line.chars() {
                         if ch.is_whitespace() {
-                            temp.push_str(&format!("{}{}{}", te_space, ch, Attribute::Reset));
+                            write!(temp, "{}{}{}", te_space, ch, Attribute::Reset.to_string())
+                                .unwrap();
                             continue;
                         }
-                        temp.push_str(&format!("{}{}{}", te, ch, Attribute::Reset));
+                        write!(temp, "{}{}{}", te, ch, Attribute::Reset.to_string()).unwrap();
                     }
                 } else {
-                    temp.push_str(&format!(
-                        "{}{}{}{:?}",
-                        te,
-                        line,
-                        Attribute::Reset,
-                        Color::Reset
-                    ))
+                    write!(temp, "{}{}{}", te, line, Attribute::Reset.to_string(),).unwrap()
                 }
 
                 if i != l.clone().count() - 1 {
-                    temp.push_str("\n");
+                    write!(temp, "\n").unwrap();
                 }
             }
-            compiled_string = temp;
+            compiled_string = temp.to_string();
         }
 
         if !inline {
