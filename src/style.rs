@@ -169,6 +169,30 @@ impl Style {
         self
     }
 
+    pub fn align(mut self, pos: &[Position]) -> Self {
+        if pos.len() > 2 {
+            panic!("Cannot provide more than 2 values for align");
+        }
+        if pos.len() > 0 {
+            self.set(Props::AlignHorizontalKey, Value::Pos(pos[0]));
+        }
+
+        if pos.len() > 1 {
+            self.set(Props::AlignVerticalKey, Value::Pos(pos[1]));
+        }
+        self
+    }
+
+    pub fn align_horizontal(mut self, pos: Position) -> Self {
+        self.set(Props::AlignHorizontalKey, Value::Pos(pos));
+        self
+    }
+
+    pub fn align_vertical(mut self, pos: Position) -> Self {
+        self.set(Props::AlignVerticalKey, Value::Pos(pos));
+        self
+    }
+
     pub fn underline(mut self, value: bool) -> Self {
         self.set(Props::UnderlineKey, Value::Bool(value));
         self
