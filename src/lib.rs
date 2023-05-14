@@ -1,6 +1,7 @@
 pub mod align;
 pub mod border;
 pub mod color;
+pub mod join;
 pub mod padding;
 pub mod position;
 pub mod renderer;
