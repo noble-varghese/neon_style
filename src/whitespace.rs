@@ -1,7 +1,7 @@
 use crossterm::style::{Attribute, SetBackgroundColor, SetForegroundColor};
 use textwrap::core::display_width;
 
-use crate::{color::ColorValue, Color};
+use crate::{color::ColorValue, Hue};
 
 pub struct WhiteSpace {
     pub style: String,
@@ -60,7 +60,7 @@ pub fn with_whitespace_chars(strs: String) -> WhiteSpaceType {
     return WhiteSpaceType::Chars(strs);
 }
 
-pub fn with_whitespace_bg(c: Color) -> WhiteSpaceType {
+pub fn with_whitespace_bg(c: Hue) -> WhiteSpaceType {
     let mut b = String::new();
     if let ColorValue::Color(val) = c.color {
         b.push_str(&SetBackgroundColor(val).to_string());
@@ -68,7 +68,7 @@ pub fn with_whitespace_bg(c: Color) -> WhiteSpaceType {
     WhiteSpaceType::Style(b)
 }
 
-pub fn with_whitespace_fg(c: Color) -> WhiteSpaceType {
+pub fn with_whitespace_fg(c: Hue) -> WhiteSpaceType {
     let mut b = String::new();
     if let ColorValue::Color(val) = c.color {
         b.push_str(&SetForegroundColor(val).to_string());
