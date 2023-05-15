@@ -4,7 +4,7 @@ pub mod color;
 pub mod padding;
 pub mod renderer;
 pub mod style;
-pub use color::Colour as Color;
+pub use color::Hue;
 
 pub use border::Border;
 pub use border::{
