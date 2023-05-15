@@ -18,11 +18,17 @@ pub fn get_lines(s: &str) -> (Split<&str>, usize) {
     return (lines, widest);
 }
 
-pub fn align_text_vertical(strs: &mut String, pos: Position, height: usize) -> String {
+pub fn get_strs_height(strs: &str) -> usize {
     let str_height = strs
         .chars()
         .map(|ch| ch == '\n')
-        .fold(0, |acc, x| if x { acc + 1 } else { acc });
+        .fold(0, |acc, x| if x { acc + 1 } else { acc })
+        + 1;
+    str_height
+}
+
+pub fn align_text_vertical(strs: &mut String, pos: Position, height: usize) -> String {
+    let str_height = get_strs_height(strs);
     if height < str_height {
         return strs.to_string();
     }

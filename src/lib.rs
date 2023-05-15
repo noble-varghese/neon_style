@@ -2,7 +2,6 @@ pub mod align;
 pub mod border;
 pub mod color;
 pub mod padding;
-pub mod position;
 pub mod renderer;
 pub mod style;
 pub use color::Colour as Color;
@@ -16,4 +15,8 @@ pub use border::{
 pub mod join;
 pub use join::{join_horizontally, join_vertically};
 
-pub use position::Position;
+pub mod position;
+pub use position::{place, place_horizontal, place_vertical, Position};
+
+pub mod whitespace;
+pub use whitespace::{with_whitespace_bg, with_whitespace_chars, with_whitespace_fg};
