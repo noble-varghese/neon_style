@@ -7,7 +7,7 @@ pub enum ColorValue {
 }
 
 #[derive(PartialEq, Clone, Copy)]
-pub struct Colour {
+pub struct Hue {
     pub color: ColorValue,
 }
 
@@ -15,7 +15,7 @@ fn to_hex_digit(c: char) -> u8 {
     c.to_digit(16).unwrap() as u8
 }
 
-impl Colour {
+impl Hue {
     fn from_hex(hex: &str) -> Option<Self> {
         let mut chars = hex
             .chars()
@@ -39,7 +39,7 @@ impl Colour {
     }
 }
 
-impl Default for Colour {
+impl Default for Hue {
     fn default() -> Self {
         Self {
             color: ColorValue::NoColor(),
@@ -47,13 +47,13 @@ impl Default for Colour {
     }
 }
 
-impl From<&str> for Colour {
+impl From<&str> for Hue {
     fn from(s: &str) -> Self {
         Self::from_hex(s).unwrap()
     }
 }
 
-impl From<Color> for Colour {
+impl From<Color> for Hue {
     fn from(value: Color) -> Self {
         Self {
             color: ColorValue::Color(value),

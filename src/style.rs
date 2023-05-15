@@ -3,7 +3,7 @@ use std::{cmp, collections::HashMap, usize};
 use crate::{
     align::{align_text_horizontal, align_text_vertical, get_lines},
     border::{get_first_char_as_string, render_horizontal_edge, Border},
-    color::{ColorValue, Colour},
+    color::{ColorValue, Hue},
     padding::{pad_bottom, pad_left, pad_right, pad_top},
     position::Position,
 };
@@ -75,7 +75,7 @@ pub enum Value {
     Str(String),
     Bool(bool),
     Int(usize),
-    Color(Colour),
+    Color(Hue),
     Pos(Position),
     Border(Border),
 }
@@ -148,13 +148,13 @@ impl Style {
         Border::default()
     }
 
-    pub fn get_as_color(&self, prop: Props) -> Colour {
+    pub fn get_as_color(&self, prop: Props) -> Hue {
         if self.rules.contains_key(&prop) {
             if let Value::Color(val) = self.rules.get(&prop).unwrap() {
                 return val.clone();
             }
         }
-        Colour::default()
+        Hue::default()
     }
 
     pub fn bold(mut self, value: bool) -> Self {
@@ -300,7 +300,7 @@ impl Style {
         self
     }
 
-    pub fn border_foreground(mut self, cols: &[Colour]) -> Self {
+    pub fn border_foreground(mut self, cols: &[Hue]) -> Self {
         if cols.len() > 4 {
             panic!("Cannot provide more than 4 values for border color");
         }
@@ -315,7 +315,7 @@ impl Style {
         self
     }
 
-    pub fn border_background(mut self, cols: &[Colour]) -> Self {
+    pub fn border_background(mut self, cols: &[Hue]) -> Self {
         if cols.len() > 4 {
             panic!("Cannot provide more than 4 values for border color");
         }
@@ -327,17 +327,17 @@ impl Style {
         self
     }
 
-    pub fn foreground(mut self, c: Colour) -> Self {
+    pub fn foreground(mut self, c: Hue) -> Self {
         self.set(Props::ForegroundKey, Value::Color(c));
         self
     }
 
-    pub fn background(mut self, c: Colour) -> Self {
+    pub fn background(mut self, c: Hue) -> Self {
         self.set(Props::BackgroundKey, Value::Color(c));
         self
     }
 
-    pub fn text_color(mut self, c: Colour) -> Self {
+    pub fn text_color(mut self, c: Hue) -> Self {
         self.set(Props::TextColorKey, Value::Color(c));
         self
     }
@@ -389,7 +389,7 @@ impl Style {
         let bgc = self.get_as_color(Props::MarginBackgroundKey);
         let mut style = None;
         let mut t = String::new();
-        if bgc != Colour::default() {
+        if bgc != Hue::default() {
             if let ColorValue::Color(val) = bgc.color {
                 t.push_str(&SetBackgroundColor(val).to_string());
                 style = Some(&t);
@@ -662,13 +662,13 @@ impl Style {
             te.push_str(&Attribute::Dim.to_string());
         }
 
-        if text_color != Colour::default() {
+        if text_color != Hue::default() {
             if let ColorValue::Color(val) = text_color.color {
                 te.push_str(&SetForegroundColor(val).to_string())
             }
         }
 
-        if bg != Colour::default() {
+        if bg != Hue::default() {
             if let ColorValue::Color(val) = bg.color {
                 te.push_str(&SetBackgroundColor(val).to_string());
                 if color_whitespaces {
@@ -682,7 +682,7 @@ impl Style {
             }
         }
 
-        if fg != Colour::default() {
+        if fg != Hue::default() {
             if let ColorValue::Color(val) = fg.color {
                 te.push_str(&SetForegroundColor(val).to_string());
                 if color_whitespaces {
@@ -824,19 +824,19 @@ fn which_sides_int(values: &[i32]) -> (i32, i32, i32, i32) {
     return (top, right, bottom, left);
 }
 
-fn style_border(border: &str, fg: Colour, bg: Colour) -> String {
+fn style_border(border: &str, fg: Hue, bg: Hue) -> String {
     let mut compiled_string = String::new();
-    if fg == Colour::default() && bg == Colour::default() {
+    if fg == Hue::default() && bg == Hue::default() {
         return border.to_string();
     }
 
-    if fg != Colour::default() {
+    if fg != Hue::default() {
         if let ColorValue::Color(val) = fg.color {
             compiled_string.push_str(&SetForegroundColor(val).to_string());
         }
     }
 
-    if bg != Colour::default() {
+    if bg != Hue::default() {
         if let ColorValue::Color(val) = bg.color {
             compiled_string.push_str(&SetBackgroundColor(val).to_string());
         }
@@ -878,12 +878,12 @@ fn which_sides_bool(values: &[bool]) -> (bool, bool, bool, bool) {
     return (top, right, bottom, left);
 }
 
-fn which_sides_color(values: &[Colour]) -> (Colour, Colour, Colour, Colour) {
+fn which_sides_color(values: &[Hue]) -> (Hue, Hue, Hue, Hue) {
     let [mut top, mut bottom, mut left, mut right] = [
-        Colour::default(),
-        Colour::default(),
-        Colour::default(),
-        Colour::default(),
+        Hue::default(),
+        Hue::default(),
+        Hue::default(),
+        Hue::default(),
     ];
     match values.len() {
         1 => {

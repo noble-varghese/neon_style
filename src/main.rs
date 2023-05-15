@@ -2,7 +2,7 @@ use std::println;
 
 use neon_style::style::Style;
 use neon_style::{
-    rounded_border, with_whitespace_chars, with_whitespace_fg, Color as neon_color, Position,
+    rounded_border, with_whitespace_chars, with_whitespace_fg, Hue, Position,
 };
 
 fn main() {
@@ -25,36 +25,36 @@ fn main() {
     //     .underline(true)
     //     .underline_spaces(false)
     //     .padding(&[1, 2])
-    //     .background(neon_color::from("#874BFD"))
+    //     .background(Hue::from("#874BFD"))
     //     .border(tab_border, &[true])
     //     .margin(&[4])
-    //     // .border_foreground(&[neon_color::from("#FF0000")])
-    //     .text_color(neon_color::from("#FF0000"));
+    //     // .border_foreground(&[Hue::from("#FF0000")])
+    //     .text_color(Hue::from("#FF0000"));
 
     // println!("{}", style.render(strs));
 
     let dialogue_box = Style::new_style()
         .border(rounded_border(), &[true])
-        .border_foreground(&[neon_color::from("#874BFD")])
+        .border_foreground(&[Hue::from("#874BFD")])
         .padding(&[1, 0]);
     // println!("{}", dialogue_box.render("Noble".into()));
 
     let button_style = Style::new_style()
-        .foreground(neon_color::from("#FFF7DB"))
-        .background(neon_color::from("#F25D94"))
+        .foreground(Hue::from("#FFF7DB"))
+        .background(Hue::from("#F25D94"))
         .padding(&[0, 3])
         .margin_top(1);
 
     let active_button_style = button_style
         .copy()
-        .foreground(neon_color::from("#FFF7DB"))
-        .background(neon_color::from("#888B7E"))
+        .foreground(Hue::from("#FFF7DB"))
+        .background(Hue::from("#888B7E"))
         .margin_right(2)
         .underline(true);
 
     let question = Style::new_style()
         .width(50)
-        .text_color(neon_color::from("#FF0000"))
+        .text_color(Hue::from("#FF0000"))
         .align(&[Position::Center])
         .render("Are you sure you want to exit ?".into());
 
@@ -75,7 +75,7 @@ fn main() {
         dialogue_box.render(ui),
         &[
             with_whitespace_chars("猫咪".into()),
-            with_whitespace_fg(neon_color::from("#383838")),
+            with_whitespace_fg(Hue::from("#383838")),
         ],
     );
     println!("{}", d);
