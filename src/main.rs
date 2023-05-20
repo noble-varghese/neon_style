@@ -1,9 +1,7 @@
 use std::println;
 
 use neon_style::style::Style;
-use neon_style::{
-    rounded_border, with_whitespace_chars, with_whitespace_fg, Hue, Position,
-};
+use neon_style::{rounded_border, with_whitespace_chars, with_whitespace_fg, Hue, Position};
 
 fn main() {
     // let strs = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.\nLorem Ipsum has been the industry's standard dummy text ever since the 1500s, \nwhen an unknown printer took a galley of type and scrambled it to make a type specimen book. \nIt has survived not only five centuries, but also the leap into electronic typesetting, \nremaining essentially unchanged. It was popularised in the 1960s with the release of Letraset\nsheets containing Lorem Ipsum passages, and more recently with desktop publishing software \nlike Aldus PageMaker including versions of Lorem Ipsum"
@@ -54,14 +52,13 @@ fn main() {
 
     let question = Style::new_style()
         .width(50)
+        .max_width(20)
         .text_color(Hue::from("#FF0000"))
         .align(&[Position::Center])
         .render("Are you sure you want to exit ?".into());
 
-    // println!("{}", noble);
-
     let ok_button = active_button_style.render("Yes".into());
-    let cancel_button = button_style.render("Cancel".into());
+    let cancel_button = button_style.render("Maybe".into());
 
     let buttons = neon_style::join_horizontally(Position::Top, &[ok_button, cancel_button]);
 
