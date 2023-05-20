@@ -46,10 +46,12 @@ impl WhiteSpace {
             i += display_width(&r[j]);
         }
 
-        let short = width - display_width(&b);
-        if short > 0 {
-            let s = " ".repeat(short);
-            b.push_str(&s);
+        if display_width(&b) <= width {
+            let short = width - display_width(&b);
+            if short > 0 {
+                let s = " ".repeat(short);
+                b.push_str(&s);
+            }
         }
         b.push_str(&Attribute::Reset.to_string());
         b.to_string()
@@ -57,7 +59,7 @@ impl WhiteSpace {
 }
 
 pub fn with_whitespace_chars(strs: String) -> WhiteSpaceType {
-    return WhiteSpaceType::Chars(strs);
+    WhiteSpaceType::Chars(strs)
 }
 
 pub fn with_whitespace_bg(c: Hue) -> WhiteSpaceType {
