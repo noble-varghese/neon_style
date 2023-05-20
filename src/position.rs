@@ -112,6 +112,5 @@ pub fn place_vertical(height: i32, pos: Position, strs: String, opts: &[WhiteSpa
             }
         }
     }
-
-    return b;
+    b
 }

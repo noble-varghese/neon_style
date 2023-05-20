@@ -191,6 +191,16 @@ impl Style {
         self
     }
 
+    pub fn max_width(mut self, val: i32) -> Self {
+        self.set(Props::MaxWidthKey, Value::Int(val as usize));
+        self
+    }
+
+    pub fn max_height(mut self, val: i32) -> Self {
+        self.set(Props::MaxHeightKey, Value::Int(val as usize));
+        self
+    }
+
     pub fn width(mut self, val: i32) -> Self {
         self.set(Props::WidthKey, Value::Int(val as usize));
         self
@@ -452,16 +462,12 @@ impl Style {
 
         let (lines, width) = get_lines(strs);
 
-        if has_left {
-            if border.left.is_empty() {
-                border.left = String::from(" ");
-            }
+        if has_left && border.left.is_empty() {
+            border.left = String::from(" ");
         }
 
-        if has_right {
-            if border.right.is_empty() {
-                border.right = String::from(" ");
-            }
+        if has_right && border.right.is_empty() {
+            border.right = String::from(" ");
         }
 
         if has_top && has_left && border.top_left.is_empty() {
@@ -566,7 +572,7 @@ impl Style {
             compiled_string.push_str(&bottom);
         }
 
-        return compiled_string;
+        compiled_string
     }
 
     fn is_set(&self, key: Props) -> bool {
@@ -621,6 +627,8 @@ impl Style {
         let height = self.get_as_int(Props::HeightKey);
         let horizontal_align = self.get_as_position(Props::AlignHorizontalKey);
         let vertical_align = self.get_as_position(Props::AlignVerticalKey);
+        let max_width = self.get_as_int(Props::MaxWidthKey);
+        let max_height = self.get_as_int(Props::MaxHeightKey);
 
         // Padding related components
         let top_padding = self.get_as_int(Props::PaddingTopKey);
@@ -788,6 +796,22 @@ impl Style {
             compiled_string = self.apply_margins(&compiled_string, inline);
         }
 
+        // Truncate the string according to the max width and height.
+        {
+            if max_width > 0 {
+                compiled_string = truncated_string(&compiled_string, max_width);
+            }
+        }
+
+        if max_height > 0 {
+            let mut lines = compiled_string
+                .split("\n")
+                .map(|c| c.to_string())
+                .collect::<Vec<String>>();
+            lines = lines[..cmp::min(max_height, lines.len())].to_vec();
+            compiled_string = lines.join("\n");
+        }
+
         compiled_string
     }
 }
@@ -913,4 +937,32 @@ fn which_sides_color(values: &[Hue]) -> (Hue, Hue, Hue, Hue) {
         _ => {}
     }
     return (top, right, bottom, left);
+}
+
+fn truncated_string(strs: &str, max_width: usize) -> String {
+    let mut current_width = 0;
+    let mut truncated_string = String::new();
+    let mut in_escape_seq = false;
+
+    for ch in strs.chars() {
+        if ch == '\x1b' {
+            in_escape_seq = true;
+            truncated_string.push(ch);
+        }
+
+        if !in_escape_seq && current_width < max_width {
+            truncated_string.push(ch);
+            current_width += 1;
+        }
+
+        if ch == 'm' {
+            in_escape_seq = false;
+            truncated_string.push(ch);
+        }
+
+        if current_width >= max_width {
+            break;
+        }
+    }
+    truncated_string
 }

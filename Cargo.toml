@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 crossterm = "0.21.0"
 textwrap = { version = "0.16.0", features = ["hyphenation"] }
+unicode-width = "0.1.10"
