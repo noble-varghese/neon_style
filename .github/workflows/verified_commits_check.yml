@@ -1,11 +1,7 @@
 # .github/workflows/verified_commits_check.yml
 name: Run verified commits check
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: push
 
 jobs:
   verified_commit_check:
