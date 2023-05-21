@@ -100,7 +100,7 @@ pub fn align_text_horizontal(
                     if let Some(st) = style {
                         sp = format!("{}{}", st, sp);
                     }
-                    line = format!("{}{}", line, sp);
+                    line = format!("{}{}", sp, line);
                 }
                 _ => {
                     // Default case is left orientation.
