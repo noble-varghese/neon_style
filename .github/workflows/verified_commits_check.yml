@@ -1,0 +1,15 @@
+# .github/workflows/verified_commits_check.yml
+name: Run verified commits check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  verified_commit_check:
+    name: Check for unverified commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nadock/verified_commits_check@v1
