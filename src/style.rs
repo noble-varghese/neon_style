@@ -109,7 +109,7 @@ impl Style {
     }
 
     pub fn to_string(self) -> String {
-        self.render(self.value.to_string())
+        self.render(String::from(""))
     }
 
     pub fn get_as_bool(&self, prop: Props, default_val: bool) -> bool {
