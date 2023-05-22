@@ -1,4 +1,4 @@
-### To Setup the commit verification using the GPG key follow the steps mentioned
+## Setting up GPG for Commit Signing
 
 1.  Install GPG in your local machine using the following command:
 
