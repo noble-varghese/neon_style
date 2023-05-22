@@ -1,4 +1,6 @@
 
+## Commit Message Guidelines and Conventions
+
 Commit message headings vary depending on the specific conventions and guidelines followed by a development team or organization. However, here are some commonly used commit message headings that are considered industry standard or best practices:
 
 1.  **feat**: Used when introducing a new feature or functionality.
