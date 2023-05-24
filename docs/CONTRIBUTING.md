@@ -1,77 +1,55 @@
-[![License](https://img.shields.io/badge/License-MIT-blue)](https://opensource.org/license/mit)
+# Contributing to Neon-Style
 
+Thank you for your interest in contributing to our project! We appreciate your time and effort in making this project better. To ensure a smooth and effective collaboration, please follow these guidelines when contributing.
 
-# Contributing to neon-style
+## Table of Contents
+- [Getting Started](#getting-started)
+- [Contributing Guidelines](#contributing-guidelines)
+- [Code Style and Conventions](#code-style-and-conventions)
+- [Issue Tracking](#issue-tracking)
+- [Communication](#communication)
+- [License](#license)
 
-We welcome contributions to neon-style from everyone! By contributing to this project, you agree to abide by the Code of Conduct outlined in the code_of_conduct.md file.
+## Getting Started
+1. Fork the repository to your own GitHub account.
+2. Clone the forked repository to your local machine.
+3. Install the necessary dependencies as outlined in the project's README file.
+4. Create a new branch for your contribution:
+   - Use a descriptive name that clearly represents the purpose of your changes.
+   - Prefix the branch name with one of the following types: `feature/`, `bugfix/`, `hotfix/`, `docs/`, `refactor/`, or `test/`.
+5. Make your changes or additions, following the project's coding style and guidelines.
+6. Test your changes thoroughly to ensure they are functioning as expected.
+7. Commit your changes with a clear and descriptive commit message. Follow the conventions described in the commit_convention.md file in docs.
+8. Push your branch to your forked repository.
+9. Submit a pull request (PR) to the original repository's `main` branch.
+   - Include a detailed description of your changes, the problem you addressed, and any relevant information.
+   - Reference any related issues using the appropriate GitHub issue syntax (e.g., "Fixes #123").
+10. Be prepared to address any feedback or requested changes during the review process.
+11. Once your changes are approved, they will be merged into the main repository.
 
-## Discussions
+## Contributing Guidelines
+- Respect the project's code of conduct. Be kind, considerate, and inclusive in all interactions.
+- Follow the project's coding style and guidelines. Maintain consistent code formatting and adhere to best practices.
+- Ensure your contributions do not introduce breaking changes unless necessary and well-justified.
+- Document your code changes, new features, or any modifications to existing functionality.
+- Write tests for your code to ensure it functions correctly and does not introduce regressions.
+- If your contribution requires updating documentation, please make the necessary changes to the project's documentation files.
 
-Our recommendation is to start a discussion as soon as you have an idea for contributing to neon-style.
-This will help you, other interested contributors & the committers get to common grounds early in time.
+## Code Style and Conventions
+- Follow the coding style guidelines outlined in the project. This includes indentation, naming conventions, and other relevant conventions.
+- Keep your code clean, readable, and well-documented. Use clear and descriptive variable and function names.
+- Strive for modular and maintainable code. Break complex tasks into smaller, reusable functions or components.
+- Ensure your code follows the project's established patterns and architecture.
 
+## Issue Tracking
+- Before starting work on a new feature or bug fix, check the project's issue tracker for any relevant issues.
+- If the issue doesn't exist, consider creating a new issue to discuss and get feedback on your proposed changes.
+- When working on an issue, mention the issue number in your commit messages and PR descriptions using the appropriate GitHub issue syntax (e.g., "Fixes #123").
 
---------------------------------------------------------------------------------------------------------------------
+## Communication
+- Join the project's communication channels (e.g., Slack, Discord, mailing list) to engage with the community and get help if needed.
+- Feel free to ask questions, provide suggestions, or discuss your ideas before contributing.
+- Respect others' opinions and be open to constructive feedback and collaboration.
 
-## How can you help
-
-### Code
-Look for Issues that are open on below categories, pick an issue, start a slack discussion on slack channel, once we get to common grounds on the solution approach, open a PR with your implementation.
-* Bug Fixes
-* Enhancements & Improvements
-* Add a new feature that you see missing
-
-### Documentation
-You can also improve our documentation
-* readme.md
-* docs/*.md
-* Any other valuable comment you'd like to add to the code that will simplify other developers' lives.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Contribution Process
-### Dev Branch
-The dev branch of neon-style is where new features are added, bugs are fixed, and improvements are made. We ask that all contributions be made to this branch.
-
-### Forking the Repository
-To contribute to neon-style, you'll need to fork the repository to your own GitHub account. You can then make changes to your fork's dev branch.
-
-### Creating a Pull Request
-Once you have made changes to your forked repository, you can create a pull request to merge your changes into the dev branch of the original repository. Before creating a pull request, ensure that your fork is up-to-date with the original repository's development branch. This can be done by syncing your fork with the original repository using the "git fetch" and "git merge" commands.
-
-### Code Review
-All pull requests will be reviewed by our team. We appreciate constructive feedback, and we may ask for changes or further information before merging your pull request.
-
-
-### Steps
-
-To ensure a smooth and effective contribution process, please follow these guidelines:
-
-* Fork the repository and clone it locally.
-* Create a new branch for your contributions. Use a descriptive name that reflects the purpose of your changes.
-* Install the necessary dependencies and set up the project locally. Refer to the README file for detailed instructions.
-* Make your changes and improvements, adhering to the project's coding style and conventions. Ensure your code is well-documented and accompanied by appropriate tests.
-* Test your changes thoroughly to verify their correctness and compatibility with the project.
-* Commit your changes and provide a clear and concise commit message that explains the purpose of your contribution. Follow the commit_conventions ('../commit_convention.md')
-* Push your branch to your forked repository.
-* Submit a pull request (PR) to the main repository's main branch. Include a detailed description of your changes, the problem you addressed, and any relevant context.
-* Be prepared to address feedback and participate in the PR review process. Be open to constructive criticism and actively collaborate with the project maintainers to improve your contributions.
-* Once your changes are approved, they will be merged into the main repository. Congratulations on your successful contribution!
-
-### Code Style and Guidelines
-To maintain code consistency and readability, please adhere to the following guidelines:
-
-* Follow the project's coding style and conventions.
-* Ensure your code is well-documented, with clear comments and explanations.
-* Write meaningful and descriptive variable and function names.
-* Keep your code concise and avoid unnecessary complexity. If there are multiple changes you would like to make that are not dependent upon each other, consider submitting them as separate pull requests.
-* Include tests to verify the correctness and functionality of your changes.
-* [Write a good commit message](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html).
-
-### Issue Tracking
-* If you're working on a specific issue or feature, it's helpful to reference it in your PR or create an issue beforehand. This allows better visibility and coordination among contributors and maintainers
-
-### License
-By contributing to this project, you agree to license your contributions under the [MIT](https://opensource.org/license/mit).
-
---------------------------------------------------------------------------------------------------------------------
+## License
+By contributing to this project, you agree to license your contributions under the [MIT](../LICENSE). Make sure you read the agreement.
