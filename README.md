@@ -135,4 +135,5 @@ let s = Style::new_style()
 println!("{}", s.to_string());
 ```
 
-### **Setting the borders**
+## Show your support
+> Give a ⭐ if you like this project, and also feel free to contact me at any moment.
