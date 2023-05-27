@@ -2,6 +2,14 @@
 name = "neon-style"
 version = "0.1.0"
 edition = "2021"
+description = "Style definitions for nice terminal layouts in rust applications. Built with TUIs in mind."
+license = "MIT"
+readme = "./README.md"
+homepage = "https://github.com/noble-varghese/neon_style"
+repository = "https://github.com/noble-varghese/neon_style"
+keywords = ["rust", "terminal", "tui", "rust-lang"]
+categories = ["command-line-utilities"]
+rust-version = "1.64.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
