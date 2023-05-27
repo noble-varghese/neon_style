@@ -1,6 +1,6 @@
 [package]
 name = "neon-style"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Style definitions for nice terminal layouts in rust applications. Built with TUIs in mind."
 license = "MIT"
